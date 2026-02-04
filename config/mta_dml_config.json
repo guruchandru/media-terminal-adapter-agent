@@ -1,0 +1,1342 @@
+{
+    "definitions": {
+        "uint32_t": {
+            "type": "uint32",
+            "minimum": 0,
+            "maximum": 4294967295
+        },
+        "int32_t": {
+			"type": "integer",
+			"minimum": -2147483648,
+			"maximum": 2147483647
+		},
+        "boolean": {
+            "type": "bool",
+            "minimum": 0,
+            "maximum": 1
+        },
+        "string": {
+            "type": "string",
+            "minimum": 1,
+            "maximum": 256
+        }
+    },
+    "Device": {
+        "X_CISCO_COM_MTA_V6": {
+            "List_Of_Def": [
+                {
+                    "PrimaryDHCPv6Server": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "SecondaryDHCPv6Server": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "IPV6Address": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "Prefix": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "BootFileName": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "FQDN": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "Gateway": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "LeaseTimeRemaining": {
+                        "type": "uint32",
+                        "writable": false
+                    }
+                },
+                {
+                    "RebindTimeRemaining": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "RenewTimeRemaining": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "PrimaryDNS": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "SecondaryDNS": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "DHCPOption3": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "DHCPOption6": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "DHCPOption7": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "DHCPOption8": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "PCVersion": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "MACAddress": {
+                        "type": "string",
+                        "writable": false
+                    }
+                }
+            ]
+        },
+        "X_CISCO_COM_MTA": {
+            "List_Of_Def": [
+                {
+                    "PrimaryDHCPServer": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "SecondaryDHCPServer": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "pktcMtaDevEnabled": {
+                        "type": "boolean",
+                        "writable": true
+                    }
+                },
+                {
+                    "DSXLogEnable": {
+                        "type": "boolean",
+                        "writable": true
+                    }
+                },
+                {
+                    "ClearDSXLog": {
+                        "type": "boolean",
+                        "writable": true
+                    }
+                },
+                {
+                    "CallSignallingLogEnable": {
+                        "type": "boolean",
+                        "writable": true
+                    }
+                },
+                {
+                    "ClearCallSignallingLog": {
+                        "type": "boolean",
+                        "writable": true
+                    }
+                },
+                {
+                    "EnableDECTLog": {
+                        "type": "boolean",
+                        "writable": true
+                    }
+                },
+                {
+                    "EnableMTALog": {
+                        "type": "boolean",
+                        "writable": true
+                    }
+                },
+                {
+                    "pktcSigDefCallSigTos": {
+                        "type": "uint32",
+                        "writable": true
+                    }
+                },
+                {
+                    "pktcSigDefMediaStreamTos": {
+                        "type": "uint32",
+                        "writable": true
+                    }
+                },
+                {
+                    "pktcMtaDevRealmOrgName": {
+                        "type": "uint32",
+                        "writable": false
+                    }
+                },
+                {
+                    "pktcMtaDevCmsKerbRealmName": {
+                        "type": "uint32",
+                        "writable": false
+                    }
+                },
+                {
+                    "pktcMtaDevCmsIpsecCtrl": {
+                        "type": "uint32",
+                        "writable": false
+                    }
+                },
+                {
+                    "pktcMtaDevCmsSolicitedKeyTimeout": {
+                        "type": "uint32",
+                        "writable": false
+                    }
+                },
+                {
+                    "pktcMtaDevRealmPkinitGracePeriod": {
+                        "type": "uint32",
+                        "writable": false
+                    }
+                },
+                {
+                    "IPAddress": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "BootFileName": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "FQDN": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "SubnetMask": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "Gateway": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "LeaseTimeRemaining": {
+                        "type": "uint32",
+                        "writable": false
+                    }
+                },
+                {
+                    "RebindTimeRemaining": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "RenewTimeRemaining": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "PrimaryDNS": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "SecondaryDNS": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "DHCPOption3": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "DHCPOption6": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "DHCPOption7": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "DHCPOption8": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "PCVersion": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "MACAddress": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "LineTableNumberOfEntries": {
+                        "type": "uint32",
+                        "writable": false
+                    }
+                },
+                {
+                    "ServiceFlowNumberOfEntries": {
+                        "type": "uint32",
+                        "writable": false
+                    }
+                },
+                {
+                    "DSXLogNumberOfEntries": {
+                        "type": "uint32",
+                        "writable": false
+                    }
+                },
+                {
+                    "MTAResetCount": {
+                        "type": "uint32",
+                        "writable": false
+                    }
+                },
+                {
+                    "LineResetCount": {
+                        "type": "uint32",
+                        "writable": false
+                    }
+                },
+                {
+                    "ClearLineStats": {
+                        "type": "uint32",
+                        "writable": true
+                    }
+                }
+            ],
+            "DSXLog": {
+                "List_Of_Def": [
+                    {
+                        "ID": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "Time": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "Description": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "Level": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    }
+                ]
+            },
+            "LineTable": {
+                "List_Of_Def": [
+                    {
+                        "LineNumber": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "Status": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "HazardousPotential": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "ForeignEMF": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "ResistiveFaults": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "ReceiverOffHook": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "RingerEquivalency": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "TriggerDiagnostics": {
+                            "type": "boolean",
+                            "writable": true
+                        }
+                    },
+                    {
+                        "CAName": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "CAPort": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "MWD": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "OverCurrentFault": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    }
+                ],
+                "CALLP": {
+                    "List_Of_Def": [
+                        {
+                            "LCState": {
+                                "type": "string",
+                                "writable": false
+                            }
+                        },
+                        {
+                            "CallPState": {
+                                "type": "string",
+                                "writable": false
+                            }
+                        },
+                        {
+                            "LoopCurrent": {
+                                "type": "string",
+                                "writable": false
+                            }
+                        }
+                    ]
+                },
+                "VQM": {
+                    "List_Of_Def": [
+                        {
+                            "ResetStats": {
+                                "type": "boolean",
+                                "writable": true
+                            }
+                        },
+                        {
+                            "CallsNumberOfEntries": {
+                                "type": "uint32",
+                                "writable": false
+                            }
+                        }
+                    ],
+                    "Calls": {
+                        "List_Of_Def": [
+                            {
+                                "Codec": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteCodec": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "CallEndTime": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "CallStartTime": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "CWErrorRate": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "PktLossConcealment": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "JitterBufferAdaptive": {
+                                    "type": "boolean",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "Originator": {
+                                    "type": "boolean",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteIPAddress": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "CallDuration": {
+                                    "type": "uint32",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "CWErrors": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "SNR": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "MicroReflections": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "DownstreamPower": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "UpstreamPower": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "EQIAverage": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "EQIMinimum": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "EQIMaximum": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "EQIInstantaneous": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "MOS-LQ": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "MOS-CQ": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "EchoReturnLoss": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "SignalLevel": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "NoiseLevel": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "LossRate": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "DiscardRate": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "BurstDensity": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "GapDensity": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "BurstDuration": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "GapDuration": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RoundTripDelay": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "Gmin": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RFactor": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "ExternalRFactor": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "JitterBufRate": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "JBNominalDelay": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "JBMaxDelay": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "JBAbsMaxDelay": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteMOS-LQ": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteMOS-CQ": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteEchoReturnLoss": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteSignalLevel": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteNoiseLevel": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteLossRate": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemotePktLossConcealment": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteDiscardRate": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteBurstDensity": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteGapDensity": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteBurstDuration": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteGapDuration": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteRoundTripDelay": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteGmin": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteRFactor": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteExternalRFactor": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteJitterBufferAdaptive": {
+                                    "type": "boolean",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteJitterBufRate": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteJBNominalDelay": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteJBMaxDelay": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteJBAbsMaxDelay": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "TxPackets": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "TxOctets": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RxPackets": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RxOctets": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "PacketLoss": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "IntervalJitter": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            },
+                            {
+                                "RemoteIntervalJitter": {
+                                    "type": "string",
+                                    "writable": false
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            "ServiceClass": {
+                "List_Of_Def": [
+                    {
+                        "ServiceClassName": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    }
+                ]
+            },
+            "ServiceFlow": {
+                "List_Of_Def": [
+                    {
+                        "SFID": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "ServiceClassName": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "Direction": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "ScheduleType": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "DefaultFlow": {
+                            "type": "boolean",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "NomGrantInterval": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "UnsolicitGrantSize": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "TolGrantJitter": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "NomPollInterval": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "MinReservedPkt": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "MaxTrafficRate": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "MinReservedRate": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "MaxTrafficBurst": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "TrafficType": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "NumberOfPackets": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    }
+                ]
+            },
+            "Dect": {
+                "List_Of_Def": [
+                    {
+                        "HardwareVersion": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "RFPI": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "SoftwareVersion": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "RegistrationMode": {
+                            "type": "boolean",
+                            "writable": true
+                        }
+                    },
+                    {
+                        "RegisterDectHandset": {
+                            "type": "uint32",
+                            "writable": true
+                        }
+                    },
+                    {
+                        "DeregisterDectHandset": {
+                            "type": "uint32",
+                            "writable": true
+                        }
+                    },
+                    {
+                        "Enable": {
+                            "type": "boolean",
+                            "writable": true
+                        }
+                    },
+                    {
+                        "PIN": {
+                            "type": "string",
+                            "writable": true
+                        }
+                    }
+                ],
+                "Handsets": {
+                    "List_Of_Def": [
+                        {
+                            "Status": {
+                                "type": "boolean",
+                                "writable": false
+                            }
+                        },
+                        {
+                            "LastActiveTime": {
+                                "type": "string",
+                                "writable": false
+                            }
+                        },
+                        {
+                            "HandsetName": {
+                                "type": "string",
+                                "writable": false
+                            }
+                        },
+                        {
+                            "OperatingTN": {
+                                "type": "string",
+                                "writable": true
+                            }
+                        },
+                        {
+                            "SupportedTN": {
+                                "type": "string",
+                                "writable": false
+                            }
+                        },
+                        {
+                            "HandsetFirmware": {
+                                "type": "string",
+                                "writable": false
+                            }
+                        }
+                    ]
+                }
+            },
+            "MTALog": {
+                "List_Of_Def": [
+                    {
+                        "Time": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "Index": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "EventID": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "EventLevel": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "Description": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    }
+                ]
+            },
+            "DECTLog": {
+                "List_Of_Def": [
+                    {
+                        "Time": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "Index": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "EventID": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "EventLevel": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "Description": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    }
+                ]
+            },
+            "Battery": {
+                "List_Of_Def": [
+                    {
+                        "Installed": {
+                            "type": "boolean",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "PowerStatus": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "Condition": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "Status": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "Life": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "TotalCapacity": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "ActualCapacity": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "RemainingCharge": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "RemainingTime": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "NumberofCycles": {
+                            "type": "uint32",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "ModelNumber": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "SerialNumber": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "PartNumber": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    },
+                    {
+                        "ChargerFirmwareRevision": {
+                            "type": "string",
+                            "writable": false
+                        }
+                    }
+                ]
+            }
+        },
+        "VoiceService": {
+            "List_Of_Def": [
+                {
+                    "Data": {
+                        "type": "string",
+                        "writable": true
+                    }
+                }
+            ]
+        },
+        "X_RDKCENTRAL-COM_MTA": {
+            "List_Of_Def": [
+                {
+                    "pktcMtaDevResetNow": {
+                        "type": "boolean",
+                        "writable": true
+                    }
+                },
+                {
+                    "Ipv4DhcpStatus": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "Ipv6DhcpStatus": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "ConfigFileStatus": {
+                        "type": "string",
+                        "writable": false
+                    }
+                },
+                {
+                    "LineRegisterStatus": {
+                        "type": "string",
+                        "writable": false
+                    }
+                }
+            ]
+        },
+        "X_RDKCENTRAL-COM_EthernetWAN_MTA": {
+            "List_Of_Def": [
+                {
+                    "StartupIPMode": {
+                        "type": "integer",
+                        "writable": true
+                    }
+                },
+                {
+                    "IPv4PrimaryDhcpServerOptions": {
+                        "type": "string",
+                        "writable": true
+                    }
+                },
+                {
+                    "IPv4SecondaryDhcpServerOptions": {
+                        "type": "string",
+                        "writable": true
+                    }
+                },
+                {
+                    "IPv6PrimaryDhcpServerOptions": {
+                        "type": "string",
+                        "writable": true
+                    }
+                },
+                {
+                    "IPv6SecondaryDhcpServerOptions": {
+                        "type": "string",
+                        "writable": true
+                    }
+                }
+            ]
+        }
+    }
+}

@@ -71,8 +71,10 @@
 #ifndef  _COSA_APIS_H
 #define  _COSA_APIS_H
 
-#include "ansc_platform.h"
-#include "ansc_string_util.h"
+/* Legacy platform includes commented out for JSON-driven RBUS approach */
+/* #include "ansc_platform.h" */
+#include "mta_compat_types.h"  /* Include compatibility layer */
+//#include "ansc_string_util.h"
 
 #include "cosa_dml_api_common.h"
 

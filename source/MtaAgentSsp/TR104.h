@@ -24,8 +24,9 @@
 #include <LatticeMtaTR104.h>
 #endif //INTEL_PUMA7
 #include <rbus/rbus.h>
-#include "ccsp_trace.h"
-#include "ansc_platform.h"
+#include "../TR-181/middle_layer_src/mta_compat_types.h"
+//#include "ccsp_trace.h"
+/*#include "ansc_platform.h"*/
 #include "mta_hal.h"
 
 int mta_hal_getTR104parameterValues(char **parameterNamesList, int *parameterListLen, char ***parameterValuesList);

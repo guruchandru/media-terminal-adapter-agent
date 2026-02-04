@@ -33,6 +33,9 @@
    limitations under the License.
 **********************************************************************/
 
+#define _GNU_SOURCE
+#include <string.h>
+
 #ifdef __GNUC__
 #if (!defined _BUILD_ANDROID) && (!defined _NO_EXECINFO_H_)
 #include <execinfo.h>
@@ -40,99 +43,113 @@
 #endif
 
 #include "ssp_global.h"
-#include "stdlib.h"
 #ifdef INCLUDE_BREAKPAD
 #include "breakpad_wrapper.h"
 #endif
-#include "ccsp_dm_api.h"
+#include "stdlib.h"
+/* WebConfig framework - skip if causes compilation issues */
+#if defined(FEATURE_SUPPORT_WEBCONFIG) && !defined(SKIP_WEBCONFIG_FOR_BUILD)
+    /* Force disable CCSP support for RBUS-only builds */
+    #ifdef CCSP_SUPPORT_ENABLED
+        #undef CCSP_SUPPORT_ENABLED
+    #endif
+    #include "webconfig_framework.h"
+#endif
 #ifdef USE_PCD_API_EXCEPTION_HANDLING
 #include "pcdapi.h"
 #endif
 //#include <docsis_ext_interface.h>
-#include "safec_lib_common.h"
+//#include "safec_lib_common.h"
+#include <safec_lib.h>
 #include "syscfg/syscfg.h"
 #include "secure_wrapper.h"
-#define DEBUG_INI_NAME  "/etc/debug.ini"
 #ifdef MTA_TR104SUPPORT
 #define MTAAGENT_SYSEVENT 1
 #include "TR104.h"
 #define TR104_ENABLE "TR104enable"
-#include "webconfig_framework.h"
 int CosaDmlTR104DataSet(char *pString,int bootup);
 #endif
+
+#include "mta_log.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
+/* RBUS implementation */
+#include "../TR-181/middle_layer_src/mta_rbus_handlers.h"
+
+#define MTA_LOG_FILE "/rdklogs/logs/MtaLog.txt.0"
+#define MTA_CCSP_INIT_FILE_BOOTUP "/tmp/mta_ccsp_initialized_bootup"
+#define MAX_SUBSYSTEM_SIZE 32
+#define NUM_SUBSYSTEM_TYPES (sizeof(gSubsystem_type_table)/sizeof(gSubsystem_type_table[0]))
+
+/* Initialize logging to file */
+static void init_mta_logging(void) {
+    /* Create directory if it doesn't exist */
+    if (mkdir("/rdklogs", 0755) != 0 && errno != EEXIST) {
+        fprintf(stderr, "Failed to create /rdklogs directory: %s\n", strerror(errno));
+    }
+    if (mkdir("/rdklogs/logs", 0755) != 0 && errno != EEXIST) {
+        fprintf(stderr, "Failed to create /rdklogs/logs directory: %s\n", strerror(errno));
+    }
+    
+    /* Open log file */
+    g_mta_logfile = fopen(MTA_LOG_FILE, "a");
+    if (!g_mta_logfile) {
+        fprintf(stderr, "Failed to open log file %s: %s\n", MTA_LOG_FILE, strerror(errno));
+    } else {
+        setvbuf(g_mta_logfile, NULL, _IOLBF, 0); /* Line buffered */
+        fprintf(stderr, "MTA logging initialized: %s\n", MTA_LOG_FILE);
+        fprintf(g_mta_logfile, "\n=== MTA Agent Log Started ===\n");
+        fflush(g_mta_logfile);
+    }
+}
 
 #include "cap.h"
 static cap_user appcaps;
 
-PDSLH_CPE_CONTROLLER_OBJECT     pDslhCpeController      = NULL;
-PCOMPONENT_COMMON_DM            g_pComponent_Common_Dm  = NULL;
-char                            g_Subsystem[32]         = {0};
-PCCSP_COMPONENT_CFG             gpPnmStartCfg           = NULL;
-PCCSP_FC_CONTEXT                pPnmFcContext           = (PCCSP_FC_CONTEXT           )NULL;
-PCCSP_CCD_INTERFACE             pPnmCcdIf               = (PCCSP_CCD_INTERFACE        )NULL;
-PCCC_MBI_INTERFACE              pPnmMbiIf               = (PCCC_MBI_INTERFACE         )NULL;
+/* Legacy common-library global variables commented out for JSON-driven RBUS approach */
+/* PDSLH_CPE_CONTROLLER_OBJECT     pDslhCpeController      = NULL; */
+/* PCOMPONENT_COMMON_DM            g_pComponent_Common_Dm  = NULL; */
+/* PCCSP_FC_CONTEXT                pMtaFcContext           = (PCCSP_FC_CONTEXT            )NULL; */
+/* PCCSP_CCD_INTERFACE             pMtaCcdIf               = (PCCSP_CCD_INTERFACE         )NULL; */
+/* PCCC_MBI_INTERFACE              pMtaMbiIf               = (PCCC_MBI_INTERFACE          )NULL; */
+char                            g_Subsystem[MAX_SUBSYSTEM_SIZE]         = {0};
 BOOL                            g_bActive               = FALSE;
 
-void
-CcspBaseIf_deadlock_detection_log_print
-(
-    int sig
-);
-
-int 
-GetLogInfo
-(
-    ANSC_HANDLE bus_handle,
-    char *Subsytem,
-    char *pParameterName
-);
+int consoleDebugEnable = 0;
+FILE* debugLogFile;
 
 int  cmd_dispatch(int  command)
 {
-    char*                           pParamNames[]      = {"Device.X_CISCO_COM_MTA."};
-    parameterValStruct_t**          ppReturnVal        = NULL;
-    int                             ulReturnValCount   = 0;
-    int                             i                  = 0;
+    /* Legacy messagebus/DML code commented out for RBUS approach - no longer needed */
+    /* char*                           pParamNames[]      = {"Device.X_CISCO_COM_MTA."}; */
+    /* parameterValStruct_t**          ppReturnVal        = NULL; */
+    /* int                             ulReturnValCount   = 0; */
+    /* int                             i                  = 0; */
+    int ret = 0;
 
     switch ( command )
     {
             case	'e' :
 
-                CcspTraceInfo(("Connect to bus daemon...\n"));
+            CcspTraceInfo(("Initializing MTA Agent with RBUS...\n"));
 
-            {
-                char                            CName[256];
-
-                if ( g_Subsystem[0] != 0 )
-                {
-                    /* CID 62739 Calling risky function */
-		    _ansc_snprintf(CName, sizeof(g_Subsystem)+sizeof(gpPnmStartCfg->ComponentId), "%s%s", g_Subsystem, gpPnmStartCfg->ComponentId);
-                }
-                else
-                {
-                    _ansc_snprintf(CName, sizeof(gpPnmStartCfg->ComponentId), "%s", gpPnmStartCfg->ComponentId);
-                }
-
-                ssp_PnmMbi_MessageBusEngage
-                    ( 
-                        CName,
-                        CCSP_MSG_BUS_CFG,
-                        gpPnmStartCfg->DbusPath
-                    );
+            /* New RBUS-based initialization */
+            if (mta_rbus_init(RBUS_COMPONENT_NAME_MTA) != 0) {
+                CcspTraceError(("Failed to initialize RBUS\n"));
+                return -1;
             }
 
+            g_bActive = TRUE;
+            CcspTraceInfo(("MTA RBUS Module loaded successfully...\n"));
 
-                ssp_create_pnm(gpPnmStartCfg);
-                ssp_engage_pnm(gpPnmStartCfg);
-
-                g_bActive = TRUE;
-
-                CcspTraceInfo(("MTA Agent Module loaded successfully...\n"));
-
+            /* Legacy messagebus/DML approach (commented out) */
             break;
 
             case    'r' :
 
+            /* Legacy CcspCcMbi_GetParameterValues will be replaced with rbus_get() */
+            #if 0
             CcspCcMbi_GetParameterValues
                 (
                     DSLH_MPA_ACCESS_CONTROL_ACS,
@@ -143,12 +160,11 @@ int  cmd_dispatch(int  command)
                     NULL
                 );
 
-
-
             for ( i = 0; i < ulReturnValCount; i++ )
             {
                 CcspTraceWarning(("Parameter %d name: %s value: %s \n", i+1, ppReturnVal[i]->parameterName, ppReturnVal[i]->parameterValue));
             }
+            #endif
             
                 break;
 
@@ -165,8 +181,14 @@ int  cmd_dispatch(int  command)
                 break;
 
         case    'c':
-
-                ssp_cancel_pnm(gpPnmStartCfg);
+                /* Terminate RBUS */
+                if (g_bActive) {
+                    mta_rbus_terminate();
+                    g_bActive = FALSE;
+                }
+                
+                /* Legacy cancel function (commented out) */
+                /* ssp_cancel_pnm(gpPnmStartCfg); */
 
                 break;
 
@@ -174,7 +196,7 @@ int  cmd_dispatch(int  command)
             break;
     }
 
-    return 0;
+    return ret;
 }
 
 static void _print_stack_backtrace(void)
@@ -190,7 +212,7 @@ static void _print_stack_backtrace(void)
         fd = open(path, O_RDWR | O_CREAT);
         if (fd < 0)
         {
-            fprintf(stderr, "failed to open backtrace file: %s", path);
+            CcspTraceError(("failed to open backtrace file: %s", path));
             return;
         }
 
@@ -199,13 +221,13 @@ static void _print_stack_backtrace(void)
         backtrace_symbols_fd( tracePtrs, count, fd);
    
         close(fd);
- 
+
         funcNames = backtrace_symbols( tracePtrs, count );
 
         if ( funcNames ) {
             // Print the stack trace
             for( i = 0; i < count; i++ )
-                printf("%s\n", funcNames[i] );
+                CcspTraceInfo(("%s\n", funcNames[i] ));
 
             // Free the string pointers
             free( funcNames );
@@ -220,7 +242,7 @@ static void daemonize(void) {
 		break;
 	case -1:
 		// Error
-		CcspTraceInfo(("Error daemonizing (fork)! %d - %s\n", errno, strerror(
+		CcspTraceError(("Error daemonizing (fork)! %d - %s\n", errno, strerror(
 				errno)));
 		exit(0);
 		break;
@@ -229,7 +251,7 @@ static void daemonize(void) {
 	}
 
 	if (setsid() < 	0) {
-		CcspTraceInfo(("Error demonizing (setsid)! %d - %s\n", errno, strerror(errno)));
+		CcspTraceError(("Error demonizing (setsid)! %d - %s\n", errno, strerror(errno)));
 		exit(0);
 	}
 
@@ -241,6 +263,7 @@ static void daemonize(void) {
 
 #ifndef  _DEBUG
 
+	int fd;
 	fd = open("/dev/null", O_RDONLY);
 	if (fd != 0) {
 		dup2(fd, 0);
@@ -261,27 +284,25 @@ static void daemonize(void) {
 
 void sig_handler(int sig)
 {
-
-    CcspBaseIf_deadlock_detection_log_print(sig);
     if ( sig == SIGINT ) {
     	signal(SIGINT, sig_handler); /* reset it to this function */
-    	CcspTraceInfo(("SIGINT received!\n"));
+    	CcspTraceError(("SIGINT received!\n"));
         exit(0);
     }
     else if ( sig == SIGUSR1 ) {
     	signal(SIGUSR1, sig_handler); /* reset it to this function */
-    	CcspTraceInfo(("SIGUSR1 received!\n"));
+    	CcspTraceWarning(("SIGUSR1 received!\n"));
     }
     else if ( sig == SIGUSR2 ) {
-    	CcspTraceInfo(("SIGUSR2 received!\n"));
+    	CcspTraceWarning(("SIGUSR2 received!\n"));
     }
     else if ( sig == SIGCHLD ) {
     	signal(SIGCHLD, sig_handler); /* reset it to this function */
-    	CcspTraceInfo(("SIGCHLD received!\n"));
+    	CcspTraceWarning(("SIGCHLD received!\n"));
     }
     else if ( sig == SIGPIPE ) {
     	signal(SIGPIPE, sig_handler); /* reset it to this function */
-    	CcspTraceInfo(("SIGPIPE received!\n"));
+    	CcspTraceWarning(("SIGPIPE received!\n"));
     }
     else if ( sig == SIGTERM )
     {
@@ -294,16 +315,16 @@ void sig_handler(int sig)
         exit(0);
     }
 	else if ( sig == SIGALRM ) {
-
     	signal(SIGALRM, sig_handler); /* reset it to this function */
     	CcspTraceInfo(("SIGALRM received!\n"));		
-}
+    }
     else {
     	/* get stack trace first */
     	_print_stack_backtrace();
-    	CcspTraceInfo(("Signal %d received, exiting!\n", sig));
+    	CcspTraceError(("Signal %d received, exiting!\n", sig));
     	exit(0);
     }
+
 }
 
 #ifndef INCLUDE_BREAKPAD
@@ -373,37 +394,23 @@ int main(int argc, char* argv[])
     int                             cmdChar            = 0;
     BOOL                            bRunAsDaemon       = TRUE;
     int                             idx                = 0;
-    DmErr_t                         err;
-    char                            *subSys            = NULL;
-    extern ANSC_HANDLE bus_handle;
-    errno_t rc       = -1;
-    int     ind      = -1;
+    errno_t                         rc                 = 1;
+    int                             ind                = -1;
+    int                             ret                = 0;
+
+    /* Initialize logging to file */
+    init_mta_logging();
+    
+    CcspTraceInfo(("MTA Agent SSP Starting...\n"));
+
+    debugLogFile = stderr;
 
     // Buffer characters till newline for stdout and stderr
     setlinebuf(stdout);
     setlinebuf(stderr);
 
-#ifdef FEATURE_SUPPORT_RDKLOG
-    RDK_LOGGER_INIT();
-#endif
-
-    /*
-     *  Load the start configuration
-     */
-    gpPnmStartCfg = (PCCSP_COMPONENT_CFG)AnscAllocateMemory(sizeof(CCSP_COMPONENT_CFG));
-    
-    if ( gpPnmStartCfg )
-    {
-        CcspComponentLoadCfg(CCSP_PNM_START_CFG_FILE, gpPnmStartCfg);
-    }
-    else
-    {
-        printf("Insufficient resources for start configuration, quit!\n");
-        exit(1);
-    }
-    
     /* Set the global pComponentName */
-    pComponentName = gpPnmStartCfg->ComponentName;
+    //pComponentName = CCSP_COMPONENT_NAME_MTA;
 
 #if defined(_DEBUG) && defined(_COSA_SIM_)
     AnscSetTraceLevel(CCSP_TRACE_LEVEL_INFO);
@@ -445,6 +452,7 @@ int main(int argc, char* argv[])
     /*This is used for ccsp recovery manager */
     if (write_pid_file("/var/tmp/CcspMtaAgent.pid") != 0)
         fprintf(stderr, "%s: fail to write PID file\n", argv[0]);
+
 #ifdef INCLUDE_BREAKPAD
     breakpad_ExceptionHandler();
     signal(SIGUSR1, sig_handler);   
@@ -477,6 +485,8 @@ int main(int argc, char* argv[])
     printf("Registering PCD exception handler CcspMTAAgent\n");
     PCD_api_register_exception_handlers( argv[0], NULL );
 #endif
+
+    /* ETHWAN mode handling and MTA provisioning */
     char eth_wan_enabled[8] = {'\0'};
     for(rc=0;rc<6;rc++)
     {
@@ -506,25 +516,31 @@ int main(int argc, char* argv[])
             CcspTraceWarning(("%s: syscfg_get failed\n", __FUNCTION__));
         }
     }
-    cmd_dispatch('e');
-    
-// printf("Calling Docsis\n");
 
-    // ICC_init();
-    // DocsisIf_StartDocsisManager();
+    /* Initialize RBUS */
+    ret = cmd_dispatch('e');
+    if(ret != 0)
+    {
+        CcspTraceError(("Exit error - cmd_dispatch failed %s:%d\n", __FUNCTION__, __LINE__));
+        exit(0);
+    }
 
-#ifdef _COSA_SIM_
+    /* Legacy Cdm_Init removed for RBUS approach */
+    #if 0
+    #ifdef _COSA_SIM_
     subSys = "";        /* PC simu use empty string as subsystem */
-#else
+    #else
     subSys = NULL;      /* use default sub-system */
-#endif
+    #endif
     err = Cdm_Init(bus_handle, subSys, NULL, NULL, pComponentName);
     if (err != CCSP_SUCCESS)
     {
         fprintf(stderr, "Cdm_Init: %s\n", Cdm_StrError(err));
         exit(1);
     }
-     v_secure_system("touch /tmp/mta_initialized");
+    #endif
+
+    v_secure_system("touch /tmp/mta_initialized");
 
 #ifdef ARRIS_XB3_PLATFORM_CHANGES
      v_secure_system("touch /rdklogs/logs/mtaEvents.log");
@@ -558,11 +574,11 @@ int main(int argc, char* argv[])
                                 rc = 0;
 retry:
                                 sleep(4);
-                                err = TR104_open();
-                                CcspTraceInfo(("TR104_open returned %d during %d iteration\n", err,retry1));
-                                if(err == 0)
+                                int tr104_err = TR104_open();
+                                CcspTraceInfo(("TR104_open returned %d during %d iteration\n", tr104_err,retry1));
+                                if(tr104_err == 0)
                                 {
-                                    CcspTraceInfo(("TR104_open returned %d and restarting CcspTr069PaSsp\n", err));
+                                    CcspTraceInfo(("TR104_open returned %d and restarting CcspTr069PaSsp\n", tr104_err));
                                     v_secure_system("systemctl restart CcspTr069PaSsp &");
                                     FILE* fptr= fopen("/nvram/.vsb64.txt","rb");
                                     if (fptr)
@@ -635,11 +651,11 @@ retry:
 
                         while(retry1<24)
                         {
-                            err = TR104_open();
-                            CcspTraceInfo(("TR104_open returned %d during %d iteration\n", err,retry1));
-                            if(err == 0)
+                            int tr104_err = TR104_open();
+                            CcspTraceInfo(("TR104_open returned %d during %d iteration\n", tr104_err,retry1));
+                            if(tr104_err == 0)
                             {
-                                CcspTraceInfo(("TR104_open returned %d and restarting CcspTr069PaSsp\n", err));
+                                CcspTraceInfo(("TR104_open returned %d and restarting CcspTr069PaSsp\n", tr104_err));
                                 v_secure_system("systemctl restart CcspTr069PaSsp &");
                                 FILE* fptr= fopen("/nvram/.vsb64.txt","rb");
                                 if (fptr)
@@ -718,21 +734,33 @@ retry:
         }
     }
 
+    /* Legacy Cdm_Term removed for RBUS approach */
+    #if 0
     err = Cdm_Term();
     if (err != CCSP_SUCCESS)
     {
         fprintf(stderr, "Cdm_Term: %s\n", Cdm_StrError(err));
         exit(1);
     }
+    #endif
 
     if ( g_bActive )
     {
-        ssp_cancel_pnm(gpPnmStartCfg);
-
+        /* Terminate RBUS */
+        mta_rbus_terminate();
         g_bActive = FALSE;
+        
+        /* Legacy cancel function (commented out) */
+        /* ssp_cancel_pnm(gpPnmStartCfg); */
+    }
+
+    /* Close log file */
+    if (g_mta_logfile) {
+        fprintf(g_mta_logfile, "=== MTA Agent Log Ended ===\n");
+        fclose(g_mta_logfile);
+        g_mta_logfile = NULL;
     }
   
- 
     return 0;
 }
 

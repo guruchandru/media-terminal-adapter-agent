@@ -72,7 +72,9 @@
 #ifndef  _COSA_DML_API_COMMON_
 #define  _COSA_DML_API_COMMON_
 
-#include "ansc_platform.h"
+/* Legacy platform includes commented out for JSON-driven RBUS approach */
+/* #include "ansc_platform.h" */
+#include "mta_compat_types.h"  /* Include compatibility layer */
 
 /*
  *  Define custom trace module ID

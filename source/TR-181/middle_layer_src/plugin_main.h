@@ -71,7 +71,7 @@
 #ifndef  _PLUGIN_MAIN_H
 #define  _PLUGIN_MAIN_H
 
-
+#include "mta_compat_types.h"  /* Include compatibility layer */
 
 #define ANSC_EXPORT_API
 

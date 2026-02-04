@@ -69,6 +69,8 @@
 #include "cosa_x_cisco_com_mta_internal.h"
 
 /*PCOSA_DIAG_PLUGIN_INFO             g_pCosaDiagPluginInfo;*/
+#if 0
+/* Legacy DML plugin initialization commented out for JSON-based RBUS registration. This entire COSA*/
 COSAGetParamValueByPathNameProc    g_GetParamValueByPathNameProc;
 COSASetParamValueByPathNameProc    g_SetParamValueByPathNameProc;
 COSAGetParamValueStringProc        g_GetParamValueString;
@@ -93,7 +95,7 @@ char*                              g_SubsystemPrefix;
 COSARegisterCallBackAfterInitDmlProc  g_RegisterCallBackAfterInitDml;
 COSARepopulateTableProc            g_COSARepopulateTable;
 
-/**********************************************************************
+/***********************************************************************
 
     caller:     owner of the object
 
@@ -240,3 +242,4 @@ CosaBackEndManagerRemove
 
     return returnStatus;
 }
+#endif

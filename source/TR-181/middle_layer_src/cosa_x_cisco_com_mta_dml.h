@@ -33,6 +33,9 @@
    limitations under the License.
 **********************************************************************/
 
+/* Include RBUS compatibility types */
+#include "mta_compat_types.h"
+
 // #ifdef CONFIG_TI_PACM
 /**************************************************************************
 
@@ -334,7 +337,7 @@ DECTLog_GetParamStringValue
         ULONG*                      pUlSize
     );
 
-#ifdef CONFIG_TI_BBU
+//#ifdef CONFIG_TI_BBU
 
 /***********************************************************************
 
@@ -380,7 +383,7 @@ Battery_GetParamStringValue
         char*                       pValue,
         ULONG*                      pUlSize
     );
-#endif /* CONFIG_TI_BBU */
+//#endif /* CONFIG_TI_BBU */
 
 BOOL
 X_RDKCENTRAL_COM_MTA_GetParamUlongValue
@@ -421,11 +424,44 @@ int CosaDmlTR104DataSet(char* pString,int bootup);
 
 // #endif /* CONFIG_TI_PACM */
 BOOL
+LineTable_GetParamBoolValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        BOOL*                       pBool
+    );
+
+BOOL
 LineTable_GetParamIntValue
     (
         ANSC_HANDLE                 hInsContext,
         char*                       ParamName,
         int*                        pInt
+    );
+
+BOOL
+LineTable_GetParamUlongValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        ULONG*                      puLong
+    );
+
+ULONG
+LineTable_GetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pValue,
+        ULONG*                      pUlSize
+    );
+
+BOOL
+LineTable_SetParamBoolValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        BOOL                        bValue
     );
 
 BOOL
@@ -470,6 +506,24 @@ LineTable_Validate
         ANSC_HANDLE                 hInsContext,
         char*                       pReturnParamName,
         ULONG*                      puLength
+    );
+
+ULONG
+CALLP_GetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pValue,
+        ULONG*                      pUlSize
+    );
+
+ULONG
+ServiceClass_GetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pValue,
+        ULONG*                      pUlSize
     );
 
 BOOL
@@ -534,6 +588,15 @@ Handsets_GetParamUlongValue
         ANSC_HANDLE                 hInsContext,
         char*                       ParamName,
         ULONG*                      puLong
+    );
+
+ULONG
+Handsets_GetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pValue,
+        ULONG*                      pUlSize
     );
 
 BOOL
@@ -669,6 +732,23 @@ ServiceFlow_GetParamBoolValue
         char*                       ParamName,
         BOOL*                       pBool
     );
+ULONG
+ServiceFlow_GetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pValue,
+        ULONG*                      pUlSize
+    );
+
+BOOL
+ServiceFlow_GetParamUlongValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        ULONG*                      puLong
+    );
+
 BOOL
 DSXLog_GetParamUlongValue
     (
@@ -714,6 +794,14 @@ Calls_GetParamUlongValue
         char*                       ParamName,
         ULONG*                      puLong
     );
+ULONG
+Calls_GetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pValue,
+        ULONG*                      pUlSize
+    );
 BOOL
 ServiceClass_IsUpdated
     (
@@ -743,6 +831,14 @@ ULONG VoiceService_GetParamStringValue(
     ULONG* pUlSize
 );
 
+BOOL
+VoiceService_SetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pString
+    );
+
 ULONG
 DSXLog_GetParamStringValue
     (
@@ -765,6 +861,21 @@ Dect_GetParamUlongValue
         ANSC_HANDLE                 hInsContext,
         char*                       ParamName,
         ULONG*                      puLong
+    );
+ULONG
+Dect_GetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pValue,
+        ULONG*                      pUlSize
+    );
+BOOL
+Dect_SetParamUlongValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        ULONG                       uValue
     );
 BOOL
 Dect_SetParamStringValue
@@ -806,3 +917,37 @@ Handsets_Commit
     (
         ANSC_HANDLE                 hInsContext
     );
+
+BOOL
+EthernetWAN_MTA_GetParamIntValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        int*                        pInt
+    );
+
+ULONG
+EthernetWAN_MTA_GetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pValue,
+        ULONG*                      pUlSize
+    );
+
+BOOL
+EthernetWAN_MTA_SetParamIntValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        int                         iValue
+    );
+
+BOOL
+EthernetWAN_MTA_SetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pString
+    );
+

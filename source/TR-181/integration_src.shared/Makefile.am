@@ -24,4 +24,4 @@ noinst_LTLIBRARIES = libCcspMtaAgent_integration_src_shared.la
 
 libCcspMtaAgent_integration_src_shared_la_CPPFLAGS = -I$(top_srcdir)/source/TR-181/board_sbapi -I$(top_srcdir)/source/TR-181/middle_layer_src -I$(top_srcdir)/source/TR-181/include -I$(top_srcdir)/source/Custom
 libCcspMtaAgent_integration_src_shared_la_SOURCES = cosa_x_cisco_com_mta_apis.c
-libCcspMtaAgent_integration_src_shared_la_LDFLAGS = -lccsp_common -lhal_mta -lcjson
+libCcspMtaAgent_integration_src_shared_la_LDFLAGS = -lsafec -lhal_mta -lcjson

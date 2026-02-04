@@ -37,59 +37,42 @@
 
     module: ssp_messagebus_interface.c
 
-        For CCSP Secure Software Download
-
-    ---------------------------------------------------------------
+        For MTA Agent module
 
     description:
 
-        SSP implementation of the CCSP Message Bus Interface
-        Service.
+        SSP implementation of the RBUS Message Bus Interface
+        Service (replacing legacy DBUS).
 
-        *   ssp_PnmMbi_MessageBusEngage
-        
-    ---------------------------------------------------------------
-
-    environment:
-
-        Embedded Linux
-
-    ---------------------------------------------------------------
-
-    author:
-
-        Tom Chang
-
-    ---------------------------------------------------------------
-
-    revision:
-
-        06/23/2011  initial revision.
+        *   ssp_MtaMbi_MessageBusEngage
+        *   ssp_MtaMbi_EventCallback
 
 **********************************************************************/
 
+/* Compatibility includes to replace common-library */
+#include "../TR-181/middle_layer_src/mta_compat_types.h"
+#include "../TR-181/middle_layer_src/mta_rbus_handlers.h"  /* RBUS handlers */
+#include <rbus/rbus.h>  /* RBUS API */
+
 #include "ssp_global.h"
-#include "safec_lib_common.h"
+//#include "safec_lib_common.h"
+#include <safec_lib.h>
 
 
 ANSC_HANDLE                 bus_handle         = NULL;
 extern  BOOL                g_bActive;
 extern  char                g_Subsystem[32];
-extern  PCOMPONENT_COMMON_DM g_pComponent_Common_Dm;
 
-BOOLEAN waitConditionReady
+/* Legacy DBUS wait function - kept for compatibility but may not be needed with RBUS */
+/*BOOLEAN waitConditionReady
 (
     void*                           hMBusHandle,
     const char*                     dst_component_id,
     char*                           dbus_path,
     char*                           src_component_id
-);
+);*/
 
-int ssp_PnmMbi_GetHealth ( )
-{
-    return g_pComponent_Common_Dm->Health;
-}
-
+#ifdef _ANSC_LINUX
 ANSC_STATUS
 ssp_PnmMbi_MessageBusEngage
     (
@@ -98,25 +81,25 @@ ssp_PnmMbi_MessageBusEngage
         char * path
     )
 {
-    ANSC_STATUS                 returnStatus       = ANSC_STATUS_SUCCESS;
+    /* Legacy CCSP_Base_Func_CB will be replaced with RBUS method handlers */
+    #if 0
     CCSP_Base_Func_CB           cb                 = {0};
+    ANSC_STATUS                 returnStatus       = ANSC_STATUS_SUCCESS;
     errno_t rc = -1;
-    
-    char PsmName[256];
+    #endif
 
+    /* Mark unused parameters in RBUS implementation */
+    UNREFERENCED_PARAMETER(config_file);
+    UNREFERENCED_PARAMETER(path);
 
-    if (  path  ==  NULL )
+    if ( ! component_id )
     {
-	    /* CID 67630 Dereference after null check fix */
-	    CcspTraceError((" !!! ssp_PnmMbi_MessageBusEngage:  path is NULL !!!\n"));
-	    return ANSC_STATUS_FAILURE;
+        CcspTraceError((" !!! ssp_PnmMbi_MessageBusEngage: component_id is NULL !!!\n"));
+        return ANSC_STATUS_FAILURE;
     }
 
-     if ( component_id  == NULL )
-     {
-	     CcspTraceError((" !!! ssp_PnmMbi_MessageBusEngage: component_id  is NULL !!!\n"));
-             return ANSC_STATUS_FAILURE;
-     }
+    /* Legacy CCSP_Message_Bus_Init will be replaced with rbus_open(). Ansc_AllocateMemory_Callback/Ansc_FreeMemory_Callback not needed in RBUS. */
+    #if 0
     /* Connect to message bus */
     returnStatus = 
         CCSP_Message_Bus_Init
@@ -137,8 +120,7 @@ ssp_PnmMbi_MessageBusEngage
 
     if ( g_Subsystem[0] != 0 )
     {
-	/* CID 59433  Calling risky function fix */
-        _ansc_snprintf(PsmName, sizeof(g_Subsystem)+sizeof(CCSP_DBUS_PSM), "%s%s", g_Subsystem, CCSP_DBUS_PSM);
+        snprintf(PsmName, sizeof(g_Subsystem)+sizeof(CCSP_DBUS_PSM), "%s%s", g_Subsystem, CCSP_DBUS_PSM);
     }
     else
     {
@@ -152,9 +134,26 @@ ssp_PnmMbi_MessageBusEngage
 
     /* Wait for PSM */
     waitConditionReady(bus_handle, PsmName, CCSP_DBUS_PATH_PSM, component_id);
+    #endif
 
-    CcspTraceInfo(("!!! Connected to message bus... bus_handle: 0x%8p !!!\n", bus_handle));
+    /* RBUS initialization - replaces legacy DBUS */
+    rbusError_t ret = rbus_open((rbusHandle_t*)&bus_handle, component_id);
+    if (ret != RBUS_ERROR_SUCCESS) {
+        CcspTraceError(("MTA: Failed to open RBUS connection: %d\n", ret));
+        return ANSC_STATUS_FAILURE;
+    }
 
+    CcspTraceInfo(("MTA: RBUS connection established: %s\n", component_id));
+
+    /* Initialize MTA RBUS handlers with JSON pattern */
+    if (mta_rbus_init(component_id) != 0) {
+        CcspTraceError(("Failed to initialize MTA RBUS handlers\n"));
+        rbus_close((rbusHandle_t)bus_handle);
+        return ANSC_STATUS_FAILURE;
+    }
+
+    /* Legacy callback structure assignments - all replaced with RBUS method handlers in mta_rbus_handlers.c */
+    #if 0
     CCSP_Msg_SleepInMilliSeconds(1000);
 
     /* Base interface implementation that will be used cross components */
@@ -192,10 +191,15 @@ ssp_PnmMbi_MessageBusEngage
 
         return returnStatus;
     }
+    #endif
 
+    CcspTraceInfo(("MTA RBUS initialization complete\n"));
     return ANSC_STATUS_SUCCESS;
 }
+#endif
 
+/* Legacy DBUS callback functions - all disabled for RBUS approach */
+#if 0
 int
 ssp_PnmMbi_Initialize
     (
@@ -253,3 +257,29 @@ ssp_PnmMbi_FreeResources
     return ANSC_STATUS_SUCCESS;
 }
 
+int ssp_PnmMbi_GetHealth ( )
+{
+    /* Health monitoring now handled by RBUS directly */
+    return CCSP_COMMON_COMPONENT_HEALTH_Green;
+}
+
+
+/* RBUS waitConditionReady - kept for compatibility but typically not needed */
+BOOLEAN waitConditionReady
+(
+    void*                           hMBusHandle,
+    const char*                     dst_component_id,
+    char*                           dbus_path,
+    char*                           src_component_id
+)
+{
+    UNREFERENCED_PARAMETER(hMBusHandle);
+    UNREFERENCED_PARAMETER(dst_component_id);
+    UNREFERENCED_PARAMETER(dbus_path);
+    UNREFERENCED_PARAMETER(src_component_id);
+    
+    /* RBUS doesn't require waiting for PSM like DBUS did */
+    CcspTraceInfo(("waitConditionReady called - skipped in RBUS implementation\n"));
+    return TRUE;
+}
+#endif /* End of legacy DBUS callbacks */

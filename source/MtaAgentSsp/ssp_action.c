@@ -83,19 +83,26 @@
 **********************************************************************/
 
 #include "ssp_global.h"
-#include "ccsp_trace.h"
-#include "dm_pack_create_func.h"
-#include "safec_lib_common.h"
+#include "../TR-181/middle_layer_src/mta_compat_types.h"
+//#include "ccsp_trace.h"
+//#include "dm_pack_create_func.h"
+//#include "safec_lib_common.h"
+#include <safec_lib.h>
+
 
 extern ULONG                                       g_ulAllocatedSizePeak;
 
-extern  PDSLH_CPE_CONTROLLER_OBJECT     pDslhCpeController;
-extern  PDSLH_DATAMODEL_AGENT_OBJECT    g_DslhDataModelAgent;
-extern  PCOMPONENT_COMMON_DM            g_pComponent_Common_Dm;
+/* Legacy common-library extern variables commented out for JSON-driven RBUS approach */
+/* extern  PDSLH_CPE_CONTROLLER_OBJECT     pDslhCpeController; */
+/* extern  PDSLH_DATAMODEL_AGENT_OBJECT    g_DslhDataModelAgent; */
+/* extern  PCOMPONENT_COMMON_DM            g_pComponent_Common_Dm; */
 extern  PCCSP_FC_CONTEXT                pPnmFcContext;
 extern  PCCSP_CCD_INTERFACE             pPnmCcdIf;
 extern  ANSC_HANDLE                     bus_handle;
 extern char                             g_Subsystem[32];
+
+/* Legacy DBUS/CCSP SSP functions disabled for JSON-driven RBUS approach */
+#if 0
 
 ANSC_STATUS
 ssp_create_pnm
@@ -448,3 +455,4 @@ ssp_PnmCCDmApplyChanges
     return returnStatus;
 }
 
+#endif /* End of legacy DBUS/CCSP SSP functions - disabled for JSON-driven RBUS approach */

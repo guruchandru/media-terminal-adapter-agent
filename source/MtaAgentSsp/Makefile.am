@@ -22,7 +22,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 bin_PROGRAMS = CcspMtaAgentSsp
 
-CcspMtaAgentSsp_CPPFLAGS = -I$(top_srcdir)/source/TR-181/board_sbapi -I$(top_srcdir)/source/TR-181/middle_layer_src -I$(top_srcdir)/source/TR-181/include -I$(top_srcdir)/source/Custom -I$(top_srcdir)/source/TR-181/integration_src.shared
-CcspMtaAgentSsp_SOURCES = ssp_messagebus_interface.c TR104.c TR104_webconfig.c ssp_main.c ssp_action.c dm_pack_datamodel.c ../TR-181/integration_src.shared/cosa_x_cisco_com_mta_apis.c
-CcspMtaAgentSsp_LDFLAGS = -lccsp_common -lhal_mta -lsyscfg -lprivilege -lsecure_wrapper -lwebconfig_framework -lmsgpackc -lsysevent -lcjson
+CcspMtaAgentSsp_CPPFLAGS = -I$(top_srcdir)/source/TR-181/board_sbapi -I$(top_srcdir)/source/TR-181/middle_layer_src -I$(top_srcdir)/source/TR-181/include -I$(top_srcdir)/source/Custom -I$(top_srcdir)/source/TR-181/integration_src.shared -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rbus -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/cjson -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/trower-base64
+CcspMtaAgentSsp_SOURCES = ssp_messagebus_interface.c TR104.c TR104_webconfig.c ssp_main.c ssp_action.c ../TR-181/integration_src.shared/cosa_x_cisco_com_mta_apis.c ../TR-181/middle_layer_src/mta_compat_globals.c ../TR-181/middle_layer_src/mta_log.c ../TR-181/middle_layer_src/mta_rbus_handlers.c ../TR-181/middle_layer_src/mta_bus_json_decode.c ../TR-181/middle_layer_src/plugin_main.c ../TR-181/middle_layer_src/cosa_x_cisco_com_mta_dml.c ../TR-181/middle_layer_src/cosa_x_cisco_com_mta_internal.c ../TR-181/middle_layer_src/plugin_main_apis.c
+CcspMtaAgentSsp_LDFLAGS = -lhal_mta -lsyscfg -lprivilege -lsafec -lsecure_wrapper -lwebconfig_framework -lmsgpackc -lsysevent -lrbus -lcjson -ltrower-base64
 

@@ -49,8 +49,8 @@
 #define  CCSP_COMMON_COMPONENT_FREERESOURCES_PRIORITY_Low   2
 
 
-extern   PCCSP_COMPONENT_CFG                        gpPnmStartCfg;
-
+//extern   PCCSP_COMPONENT_CFG                        gpPnmStartCfg;
+/* Legacy DML and common-library code commented out for JSON-driven RBUS approach
 typedef  struct
 _COMPONENT_COMMON_DM
 {
@@ -105,12 +105,12 @@ COMPONENT_COMMON_DM,  *PCOMPONENT_COMMON_DM;
             ComponentCommonDmClean(component_common_dm);                                    \
             AnscFreeMemory(component_common_dm);                                            \
          }
-
+*/
 int  cmd_dispatch(int  command);
 
 void load_data_model();
 
-
+/* Legacy DML and common-library code commented out for JSON-driven RBUS approach
 ANSC_STATUS
 ssp_create_pnm
     (
@@ -220,5 +220,5 @@ ssp_PnmCCDmApplyChanges
     (
         ANSC_HANDLE                     hThisObject
     );
-
+*/
 #endif

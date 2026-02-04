@@ -74,7 +74,10 @@
 #include "cosa_x_cisco_com_mta_apis.h"
 #include "mta_hal.h"
 #include "syscfg/syscfg.h"
-#include "safec_lib_common.h"
+/* Legacy common-library includes commented out for JSON-driven RBUS approach */
+/* #include "safec_lib_common.h" */
+#include <safec_lib.h>
+#include "mta_compat_types.h"  /* Include compatibility layer */
 #include "sysevent/sysevent.h"
 #include "ctype.h"
 

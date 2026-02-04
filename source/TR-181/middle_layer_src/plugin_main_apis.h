@@ -64,15 +64,20 @@
 #ifndef  _PLUGIN_MAIN_APIS_H
 #define  _PLUGIN_MAIN_APIS_H
 
-#include "ansc_platform.h"
+/* Legacy platform includes commented out for JSON-driven RBUS approach */
+/* #include "ansc_platform.h" */
+#include "mta_compat_types.h"  /* Include compatibility layer */
 #include "cosa_apis.h"
-#include "dslh_cpeco_interface.h"
-
-#include "dslh_dmagnt_interface.h"
-#include "ccsp_ifo_ccd.h"
+/* Legacy DSLH/CCSP interface includes commented out for JSON-driven RBUS approach */
+/* #include "dslh_cpeco_interface.h" */
+/* #include "dslh_dmagnt_interface.h" */
+/* #include "ccsp_ifo_ccd.h" */
 
 /*extern PCOSA_DIAG_PLUGIN_INFO             g_pCosaDiagPluginInfo;*/
 extern COSAGetParamValueByPathNameProc    g_GetParamValueByPathNameProc;
+
+/* Legacy COSA plugin function pointers - commented out for RBUS-only approach */
+#if 0
 extern COSASetParamValueByPathNameProc    g_SetParamValueByPathNameProc;
 extern COSAGetParamValueStringProc        g_GetParamValueString;
 extern COSAGetParamValueUlongProc         g_GetParamValueUlong;
@@ -94,6 +99,7 @@ extern PCCSP_CCD_INTERFACE                g_pPnmCcdIf;
 extern ANSC_HANDLE                        g_MessageBusHandle;
 extern char*                              g_SubsystemPrefix;
 extern COSARegisterCallBackAfterInitDmlProc  g_RegisterCallBackAfterInitDml;
+#endif
 
 /* The OID for all objects s*/
 #define COSA_DATAMODEL_BASE_OID                                 0
@@ -106,7 +112,7 @@ extern COSARegisterCallBackAfterInitDmlProc  g_RegisterCallBackAfterInitDml;
     /* duplication of the base object class content */                                      \
     COSA_BASE_CONTENT                                                                       \
     ANSC_HANDLE                  hMTA;                                                      \
-    PCOSA_PLUGIN_INFO            hCosaPluginInfo;
+    /* PCOSA_PLUGIN_INFO            hCosaPluginInfo; */  /* Commented out for RBUS */
 
 typedef  struct
 _COSA_BACKEND_MANAGER_OBJECT

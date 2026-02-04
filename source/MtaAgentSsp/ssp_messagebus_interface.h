@@ -77,6 +77,7 @@ ssp_PnmMbi_MessageBusEngage
         char * path
     );
 
+#if 0
 int
 ssp_PnmMbi_Initialize
     (
@@ -101,28 +102,6 @@ ssp_PnmMbi_FreeResources
         int priority,
         void * user_data
     );
-
-ANSC_STATUS
-ssp_PnmMbi_SendParameterValueChangeSignal
-    (
-        char * pPamameterName,
-        SLAP_VARIABLE * oldValue,
-        SLAP_VARIABLE * newValue,
-        char * pAccessList
-    );
-
-ANSC_STATUS
-ssp_PnmMbi_SendTransferCompleteSignal
-    (
-        void
-    );
-
-ANSC_STATUS 
-ssp_PnmMbi_RegisterToCR
-    (
-        ANSC_HANDLE                     hThisObject,
-        name_spaceType_t*               pParameterArray
-    );
-
+#endif
 
 #endif

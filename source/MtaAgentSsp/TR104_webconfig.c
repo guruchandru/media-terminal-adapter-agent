@@ -2,6 +2,11 @@
 #include "TR104.h"
 #include <syscfg/syscfg.h>
 #include "sysevent/sysevent.h"
+/* WebConfig framework commented out - RBUS-only build, no CCSP/DBUS */
+/* Force disable CCSP support for RBUS-only builds */
+    #ifdef CCSP_SUPPORT_ENABLED
+        #undef CCSP_SUPPORT_ENABLED
+    #endif
 #include "webconfig_framework.h"
 #include <msgpack.h>
 #include <inttypes.h>

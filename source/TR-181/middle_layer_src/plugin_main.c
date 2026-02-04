@@ -53,21 +53,26 @@
 
 **********************************************************************/
 
-#include "ansc_platform.h"
-#include "ansc_load_library.h"
-#include "safec_lib_common.h"
-#include "cosa_plugin_api.h"
+/* Legacy platform includes commented out for JSON-driven RBUS approach */
+/* #include "ansc_platform.h" */
+/* #include "ansc_load_library.h" */
+/* #include "safec_lib_common.h" */
+/* #include "cosa_plugin_api.h" */
 #include "plugin_main.h"
 #include "plugin_main_apis.h"
 
+
 PCOSA_BACKEND_MANAGER_OBJECT g_pCosaBEManager;
 void *                       g_pDslhDmlAgent;
-extern ANSC_HANDLE     g_MessageBusHandle_Irep;
-extern char            g_SubSysPrefix_Irep[32];
-extern COSARepopulateTableProc            g_COSARepopulateTable;
+/* Legacy common-library externs commented out for JSON-driven RBUS approach */
+/* extern ANSC_HANDLE     g_MessageBusHandle_Irep; */
+/* extern char            g_SubSysPrefix_Irep[32]; */
+//extern COSARepopulateTableProc            g_COSARepopulateTable;
 
 #define THIS_PLUGIN_VERSION                         1
 
+#if 0
+/* Legacy DML plugin initialization commented out for JSON-based RBUS registration. This entire COSA*/
 int ANSC_EXPORT_API
 COSA_Init
     (
@@ -359,6 +364,14 @@ COSA_Init
         g_pCosaBEManager->Initialize   ((ANSC_HANDLE)g_pCosaBEManager);
     }
     
+    /* Initialize RBUS for MTA */
+    if (mta_rbus_init("CcspMtaAgent") != 0) {
+        CcspTraceError(("%s: Failed to initialize RBUS for MTA\n", __FUNCTION__));
+        /* Continue even if RBUS init fails - fallback to CCSP message bus */
+    } else {
+        CcspTraceInfo(("%s: RBUS initialized successfully for MTA\n", __FUNCTION__));
+    }
+    
     return  0;
 
 EXIT:
@@ -450,6 +463,10 @@ COSA_Unload
 {
     ANSC_STATUS                     returnStatus            = ANSC_STATUS_SUCCESS;
 
+    /* Terminate RBUS */
+    mta_rbus_terminate();
+    CcspTraceInfo(("%s: RBUS terminated\n", __FUNCTION__));
+
     /* unload the memory here */
 
     returnStatus  =  CosaBackEndManagerRemove(g_pCosaBEManager);
@@ -518,3 +535,4 @@ COSA_MemoryTable
 {
     /*CcspTraceMemoryTable();*/
 }
+#endif /* End of legacy DML plugin initialization */

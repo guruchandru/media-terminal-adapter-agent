@@ -23,11 +23,13 @@
 #include "mta_hal.h"
 #include "syscfg/syscfg.h"
 #include "plugin_main_apis.h"
-#include "safec_lib_common.h"
+//#include "safec_lib_common.h"
+#include <safec_lib.h>
 #include "cosa_x_cisco_com_mta_dml.h"
 #include "cosa_x_cisco_com_mta_internal.h"
-#include "ccsp_base_api.h"
-#include "messagebus_interface_helper.h"
+/* Legacy DBUS headers commented out for RBUS approach */
+/* #include "ccsp_base_api.h" */
+/* #include "messagebus_interface_helper.h" */
 char MTA_provision_status[2][20] = {"MTA_PROVISIONED", "MTA_NON_PROVISIONED"};
 #define MTA_PROVISIONED "MTA_PROVISIONED"
 #define PARAM_BUF_SIZE 128+8192  //DMCLI object name + type + string parameter (8192 bytes from TR104 spec) 

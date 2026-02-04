@@ -70,7 +70,10 @@
 **************************************************************************/
 
 #include "plugin_main_apis.h"
-#include "safec_lib_common.h"
+/* Legacy common-library includes commented out for JSON-driven RBUS approach */
+/* #include "safec_lib_common.h" */
+#include <safec_lib.h>
+#include "mta_compat_types.h"  /* Include compatibility layer */
 #include "cosa_x_cisco_com_mta_apis.h"
 #include "cosa_x_cisco_com_mta_dml.h"
 #include "cosa_x_cisco_com_mta_internal.h"
