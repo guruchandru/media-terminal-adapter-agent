@@ -62,7 +62,7 @@
 #include "plugin_main_apis.h"
 
 
-PCOSA_BACKEND_MANAGER_OBJECT g_pCosaBEManager;
+PCOSA_BACKEND_MANAGER_OBJECT g_pCosaBEManager = NULL;
 void *                       g_pDslhDmlAgent;
 /* Legacy common-library externs commented out for JSON-driven RBUS approach */
 /* extern ANSC_HANDLE     g_MessageBusHandle_Irep; */

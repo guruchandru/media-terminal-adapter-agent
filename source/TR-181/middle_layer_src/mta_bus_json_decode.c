@@ -108,15 +108,34 @@ static mta_param_metadata_t* mta_meta_add(const char* full_name, rbusValueType_t
     n->meta.writable = writable;
     n->next = g_mta_meta_head;
     g_mta_meta_head = n;
+
+    /* Debug: Log metadata creation */
+    fprintf(stderr, "DEBUG: Added metadata for %s (short=%s, ns=%d, type=%d)\n",
+            full_name, n->meta.short_name ? n->meta.short_name : "NULL",
+            n->meta.namespace_type, type);
+
     return &n->meta;
 }
 
 mta_param_metadata_t* mta_find_param_metadata(const char* full_name)
 {
     if(!full_name) return NULL;
-    for(mta_param_meta_node_t* n = g_mta_meta_head; n; n = n->next) {
-        if(strcmp(n->meta.full_name, full_name) == 0) return &n->meta;
+
+    /* Debug: Log lookup attempt */
+    static int lookup_count = 0;
+    if (lookup_count < 10) {  /* Only log first 10 to avoid spam */
+        fprintf(stderr, "DEBUG: Looking up metadata for: %s (head=%p)\n", full_name, (void*)g_mta_meta_head);
+        lookup_count++;
     }
+
+    for(mta_param_meta_node_t* n = g_mta_meta_head; n; n = n->next) {
+        if(strcmp(n->meta.full_name, full_name) == 0) {
+            fprintf(stderr, "DEBUG: Found metadata for %s\n", full_name);
+            return &n->meta;
+        }
+    }
+
+    fprintf(stderr, "DEBUG: Metadata NOT found for %s\n", full_name);
     return NULL;
 }
 
@@ -328,6 +347,13 @@ int mta_decode_json_config(rbusHandle_t handle, const char *json_file_path)
 
     fprintf(stderr, "Processing MTA JSON config: %s\n", json_file_path);
     process_object_recursive(handle, device_obj, "Device", definitions);
+
+    /* Debug: Count metadata entries */
+    int meta_count = 0;
+    for(mta_param_meta_node_t* n = g_mta_meta_head; n; n = n->next) {
+        meta_count++;
+    }
+    fprintf(stderr, "DEBUG: Total metadata entries created: %d (g_mta_meta_head=%p)\n", meta_count, (void*)g_mta_meta_head);
 
     cJSON_Delete(root);
     fprintf(stderr, "MTA JSON config processing complete\n");

@@ -32,6 +32,8 @@
 #define MTA_LOG_ERROR(fmt, ...) mta_log_write_with_level(CCSP_TRACE_LEVEL_ERROR, fmt "\n", ##__VA_ARGS__)
 #define MTA_LOG_DEBUG(fmt, ...) mta_log_write_with_level(CCSP_TRACE_LEVEL_DEBUG, fmt "\n", ##__VA_ARGS__)
 
+extern PCOSA_BACKEND_MANAGER_OBJECT g_pCosaBEManager;
+
 /* RBUS handle - global for use across files */
 rbusHandle_t g_mta_rbus_handle = NULL;
 
@@ -1107,7 +1109,21 @@ int mta_rbus_init(const char *component_name)
         return -1;
     }
     
-    MTA_LOG_INFO("RBUS initialized successfully");
+    /* Create and Intialize DML data structures (replaces COSA_Init)*/
+    if (!g_pCosaBEManager)
+    {
+        MTA_LOG_INFO("Creating MTA data model...\n");
+        g_pCosaBEManager = CosaBackEndManagerCreate();
+        if (!g_pCosaBEManager ||!g_pCosaBEManager->Initialize)
+        {
+            MTA_LOG_ERROR("Failed to create MTA data model");
+            rbus_close(g_mta_rbus_handle);
+            g_mta_rbus_handle = NULL;
+            return -1;
+        }
+         MTA_LOG_INFO("MTA data model created successfully");
+         g_pCosaBEManager->Initialize   ((ANSC_HANDLE)g_pCosaBEManager);
+    }
     
     /* Decode and register elements from JSON config */
     if (mta_decode_json_config(g_mta_rbus_handle, JSON_CONFIG_PATH) != 0) {

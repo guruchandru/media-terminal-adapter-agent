@@ -94,7 +94,7 @@ ANSC_HANDLE                        g_MessageBusHandle;
 char*                              g_SubsystemPrefix;
 COSARegisterCallBackAfterInitDmlProc  g_RegisterCallBackAfterInitDml;
 COSARepopulateTableProc            g_COSARepopulateTable;
-
+#endif
 /***********************************************************************
 
     caller:     owner of the object
@@ -242,4 +242,3 @@ CosaBackEndManagerRemove
 
     return returnStatus;
 }
-#endif
