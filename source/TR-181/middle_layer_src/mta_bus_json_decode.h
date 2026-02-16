@@ -53,6 +53,7 @@ typedef struct {
     mta_namespace_t namespace_type;
     rbusValueType_t type;
     bool writable;
+    bool is_table_param;  /* TRUE if parameter belongs to a table instance */
 } mta_param_metadata_t;
 
 int mta_decode_json_config(rbusHandle_t handle, const char *json_file_path);
@@ -61,5 +62,8 @@ void mta_free_registered_elements(void);
 
 mta_param_metadata_t* mta_find_param_metadata(const char* full_name);
 void mta_free_param_metadata(void);
+
+/* Helper to extract instance number from path like "Device.X.Table.1.Param" */
+int mta_extract_instance_number(const char* param_name);
 
 #endif /* MTA_BUS_JSON_DECODE_H */

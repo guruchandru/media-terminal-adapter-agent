@@ -37,6 +37,223 @@ extern PCOSA_BACKEND_MANAGER_OBJECT g_pCosaBEManager;
 /* RBUS handle - global for use across files */
 rbusHandle_t g_mta_rbus_handle = NULL;
 
+/* ==================== Helper Functions ==================== */
+
+/**
+ * Extract instance number from parameter path
+ * Examples:
+ *   "Device.X_CISCO_COM_MTA.MTALog.1.Time" -> returns 1
+ *   "Device.X_CISCO_COM_MTA.LineTable.2.Status" -> returns 2
+ *   "Device.X_CISCO_COM_MTA.pktcMtaDevEnabled" -> returns -1 (no instance)
+ */
+static int extract_instance_number(const char* param_name)
+{
+    if (!param_name) return -1;
+    
+    const char* p = param_name;
+    const char* last_dot = NULL;
+    const char* second_last_dot = NULL;
+    
+    /* Find last two dots */
+    while (*p) {
+        if (*p == '.') {
+            second_last_dot = last_dot;
+            last_dot = p;
+        }
+        p++;
+    }
+    
+    if (!second_last_dot || !last_dot) return -1;
+    
+    /* Check if text between second_last and last dot is a number */
+    const char* start = second_last_dot + 1;
+    const char* end = last_dot;
+    
+    if (start >= end) return -1;
+    
+    /* Verify it's all digits */
+    for (const char* c = start; c < end; c++) {
+        if (*c <'0' || *c > '9') return -1;
+    }
+    
+    /* Convert to number */
+    return atoi(start);
+}
+
+/**
+ * Extract nested instance numbers from parameter path
+ * For nested tables like LineTable.{i}.VQM.Calls.{i}, extracts both instance numbers
+ * Examples:
+ *   "Device.X_CISCO_COM_MTA.LineTable.1.VQM.Calls.2.Codec" -> line_inst=1, calls_inst=2, returns true
+ *   "Device.X_CISCO_COM_MTA.LineTable.1.Status" -> line_inst=1, calls_inst=-1, returns true
+ *   "Device.X_CISCO_COM_MTA.pktcMtaDevEnabled" -> line_inst=-1, calls_inst=-1, returns false
+ */
+static bool extract_nested_instances(const char* param_name, int* line_inst, int* calls_inst)
+{
+    if (!param_name || !line_inst || !calls_inst) return false;
+    
+    *line_inst = -1;
+    *calls_inst = -1;
+    
+    /* Check if this is a Calls parameter (nested under LineTable) */
+    const char* calls_marker = strstr(param_name, ".VQM.Calls.");
+    if (!calls_marker) {
+        /* Not a nested Calls parameter, try single instance extraction */
+        *line_inst = extract_instance_number(param_name);
+        return (*line_inst != -1);
+    }
+    
+    /* Extract LineTable instance number */
+    const char* linetable_marker = strstr(param_name, ".LineTable.");
+    if (!linetable_marker) return false;
+    
+    const char* line_start = linetable_marker + strlen(".LineTable.");
+    const char* line_end = line_start;
+    while (*line_end >= '0' && *line_end <= '9') line_end++;
+    
+    if (line_end > line_start) {
+        char line_num_str[16] = {0};
+        int len = line_end - line_start;
+        if (len > 0 && len < 16) {
+            strncpy(line_num_str, line_start, len);
+            *line_inst = atoi(line_num_str);
+        }
+    }
+    
+    /* Extract Calls instance number */
+    const char* calls_start = calls_marker + strlen(".VQM.Calls.");
+    const char* calls_end = calls_start;
+    while (*calls_end >= '0' && *calls_end <= '9') calls_end++;
+    
+    if (calls_end > calls_start) {
+        char calls_num_str[16] = {0};
+        int len = calls_end - calls_start;
+        if (len > 0 && len < 16) {
+            strncpy(calls_num_str, calls_start, len);
+            *calls_inst = atoi(calls_num_str);
+        }
+    }
+    
+    return (*line_inst != -1 && *calls_inst != -1);
+}
+
+/**
+ * Get instance handle for MTALog table
+ */
+static ANSC_HANDLE get_mtalog_instance(int instance_num)
+{
+    if (instance_num < 1) return NULL;
+    
+    ULONG count = MTALog_GetEntryCount(NULL);
+    if ((ULONG)instance_num > count) return NULL;
+    
+    ULONG ins_num = 0;
+    return MTALog_GetEntry(NULL, instance_num - 1, &ins_num);
+}
+
+/**
+ * Get instance handle for DECTLog table
+ */
+static ANSC_HANDLE get_dectlog_instance(int instance_num)
+{
+    if (instance_num < 1) return NULL;
+    
+    ULONG count = DECTLog_GetEntryCount(NULL);
+    if ((ULONG)instance_num > count) return NULL;
+    
+    ULONG ins_num = 0;
+    return DECTLog_GetEntry(NULL, instance_num - 1, &ins_num);
+}
+
+/**
+ * Get instance handle for DSXLog table
+ */
+static ANSC_HANDLE get_dsxlog_instance(int instance_num)
+{
+    if (instance_num < 1) return NULL;
+    
+    ULONG count = DSXLog_GetEntryCount(NULL);
+    if ((ULONG)instance_num > count) return NULL;
+    
+    ULONG ins_num = 0;
+    return DSXLog_GetEntry(NULL, instance_num - 1, &ins_num);
+}
+
+/**
+ * Get instance handle for LineTable  
+ */
+static ANSC_HANDLE get_linetable_instance(int instance_num)
+{
+    if (instance_num < 1) return NULL;
+    
+    ULONG count = LineTable_GetEntryCount(NULL);
+    if ((ULONG)instance_num > count) return NULL;
+    
+    ULONG ins_num = 0;
+    return LineTable_GetEntry(NULL, instance_num - 1, &ins_num);
+}
+
+/**
+ * Get instance handle for Handsets table
+ */
+static ANSC_HANDLE get_handsets_instance(int instance_num)
+{
+    if (instance_num < 1) return NULL;
+    
+    ULONG count = Handsets_GetEntryCount(NULL);
+    if ((ULONG)instance_num > count) return NULL;
+    
+    ULONG ins_num = 0;
+    return Handsets_GetEntry(NULL, instance_num - 1, &ins_num);
+}
+
+/**
+ * Get instance handle for ServiceClass table
+ */
+static ANSC_HANDLE get_serviceclass_instance(int instance_num)
+{
+    if (instance_num < 1) return NULL;
+    
+    ULONG count = ServiceClass_GetEntryCount(NULL);
+    if ((ULONG)instance_num > count) return NULL;
+    
+    ULONG ins_num = 0;
+    return ServiceClass_GetEntry(NULL, instance_num - 1, &ins_num);
+}
+
+/**
+ * Get instance handle for ServiceFlow table
+ */
+static ANSC_HANDLE get_serviceflow_instance(int instance_num)
+{
+    if (instance_num < 1) return NULL;
+    
+    ULONG count = ServiceFlow_GetEntryCount(NULL);
+    if ((ULONG)instance_num > count) return NULL;
+    
+    ULONG ins_num = 0;
+    return ServiceFlow_GetEntry(NULL, instance_num - 1, &ins_num);
+}
+
+/**
+ * Get instance handle for Calls table (VQM.Calls)
+ * Note: Calls is a nested table under LineTable, so it requires parent context
+ */
+static ANSC_HANDLE get_calls_instance(ANSC_HANDLE hLineContext, int instance_num)
+{
+    if (!hLineContext || instance_num < 1) return NULL;
+    
+    PCOSA_MTA_LINETABLE_INFO pLineInfo = (PCOSA_MTA_LINETABLE_INFO)hLineContext;
+    
+    /* Get count from parent LineTable context */
+    ULONG count = pLineInfo->CallsNumber;
+    if ((ULONG)instance_num > count) return NULL;
+    
+    /* Get entry from parent context's Calls array */
+    ULONG ins_num = 0;
+    return Calls_GetEntry(hLineContext, instance_num - 1, &ins_num);
+}
+
 /* ==================== Namespace GET Dispatchers ==================== */
 
 /**
@@ -137,7 +354,7 @@ static rbusError_t get_x_cisco_com_mta(const char *short_name, rbusValue_t *data
              STR_EQ(short_name, "MACAddress")) {
         char val[512] = {0};
         ULONG val_len = sizeof(val);
-        if (X_CISCO_COM_MTA_GetParamStringValue(NULL, (char*)short_name, val, &val_len)) {
+        if (X_CISCO_COM_MTA_GetParamStringValue(NULL, (char*)short_name, val, &val_len) == 0) {
             rbusValue_SetString(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -175,7 +392,7 @@ static rbusError_t get_x_cisco_com_mta_v6(const char *short_name, rbusValue_t *d
         STR_EQ(short_name, "MACAddress")) {
         char val[512] = {0};
         ULONG val_len = sizeof(val);
-        if (X_CISCO_COM_MTA_V6_GetParamStringValue(NULL, (char*)short_name, val, &val_len)) {
+        if (X_CISCO_COM_MTA_V6_GetParamStringValue(NULL, (char*)short_name, val, &val_len) == 0) {
             rbusValue_SetString(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -194,16 +411,30 @@ static rbusError_t get_x_cisco_com_mta_v6(const char *short_name, rbusValue_t *d
 /**
  * GET handler for Device.X_CISCO_COM_MTA.LineTable.{i}.* parameters
  */
-static rbusError_t get_line_table(const char *short_name, rbusValue_t *data)
+static rbusError_t get_line_table(const char *short_name, rbusValue_t *data, int instance_num)
 {
     if (!data || !*data) {
         MTA_LOG_ERROR("get_line_table: NULL data pointer");
         return RBUS_ERROR_BUS_ERROR;
     }
     
+    MTA_LOG_DEBUG("get_line_table: short_name='%s', instance_num=%d", short_name, instance_num);
+    
+    if (instance_num <= 0) {
+        MTA_LOG_ERROR("get_line_table: Invalid instance number %d (must be >= 1)", instance_num);
+        return RBUS_ERROR_ELEMENT_DOES_NOT_EXIST;
+    }
+    
+    ANSC_HANDLE hInsContext = get_linetable_instance(instance_num);
+    if (!hInsContext) {
+        MTA_LOG_ERROR("get_line_table: Failed to get instance handle for instance %d", instance_num);
+        return RBUS_ERROR_ELEMENT_DOES_NOT_EXIST;
+    }
+    MTA_LOG_DEBUG("get_line_table: Got instance handle %p for instance %d", hInsContext, instance_num);
+    
     if (STR_EQ(short_name, "TriggerDiagnostics")) {
         BOOL val = FALSE;
-        if (LineTable_GetParamBoolValue(NULL, "TriggerDiagnostics", &val)) {
+        if (LineTable_GetParamBoolValue(hInsContext, "TriggerDiagnostics", &val)) {
             rbusValue_SetBoolean(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -214,7 +445,7 @@ static rbusError_t get_line_table(const char *short_name, rbusValue_t *data)
         STR_EQ(short_name, "MWD") ||
         STR_EQ(short_name, "OverCurrentFault")) {
         ULONG val = 0;
-        if (LineTable_GetParamUlongValue(NULL, (char*)short_name, &val)) {
+        if (LineTable_GetParamUlongValue(hInsContext, (char*)short_name, &val)) {
             rbusValue_SetUInt32(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -227,7 +458,7 @@ static rbusError_t get_line_table(const char *short_name, rbusValue_t *data)
         STR_EQ(short_name, "CAName")) {
         char val[256] = {0};
         ULONG val_len = sizeof(val);
-        if (LineTable_GetParamStringValue(NULL, (char*)short_name, val, &val_len)) {
+        if (LineTable_GetParamStringValue(hInsContext, (char*)short_name, val, &val_len) == 0) {
             rbusValue_SetString(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -239,11 +470,17 @@ static rbusError_t get_line_table(const char *short_name, rbusValue_t *data)
 /**
  * GET handler for Device.X_CISCO_COM_MTA.LineTable.{i}.CALLP.* parameters
  */
-static rbusError_t get_line_table_callp(const char *short_name, rbusValue_t *data)
+static rbusError_t get_line_table_callp(const char *short_name, rbusValue_t *data, int instance_num)
 {
     if (!data || !*data) {
         MTA_LOG_ERROR("get_line_table_callp: NULL data pointer");
         return RBUS_ERROR_BUS_ERROR;
+    }
+    
+    ANSC_HANDLE hInsContext = get_linetable_instance(instance_num);
+    if (!hInsContext && instance_num > 0) {
+        MTA_LOG_ERROR("get_line_table_callp: Invalid instance %d", instance_num);
+        return RBUS_ERROR_ELEMENT_DOES_NOT_EXIST;
     }
     
     if (STR_EQ(short_name, "LCState") ||
@@ -251,7 +488,7 @@ static rbusError_t get_line_table_callp(const char *short_name, rbusValue_t *dat
         STR_EQ(short_name, "LoopCurrent")) {
         char val[256] = {0};
         ULONG val_len = sizeof(val);
-        if (CALLP_GetParamStringValue(NULL, (char*)short_name, val, &val_len)) {
+        if (CALLP_GetParamStringValue(hInsContext, (char*)short_name, val, &val_len) == 0) {
             rbusValue_SetString(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -263,16 +500,22 @@ static rbusError_t get_line_table_callp(const char *short_name, rbusValue_t *dat
 /**
  * GET handler for Device.X_CISCO_COM_MTA.LineTable.{i}.VQM.* parameters
  */
-static rbusError_t get_line_table_vqm(const char *short_name, rbusValue_t *data)
+static rbusError_t get_line_table_vqm(const char *short_name, rbusValue_t *data, int instance_num)
 {
     if (!data || !*data) {
         MTA_LOG_ERROR("get_line_table_vqm: NULL data pointer");
         return RBUS_ERROR_BUS_ERROR;
     }
     
+    ANSC_HANDLE hInsContext = get_linetable_instance(instance_num);
+    if (!hInsContext && instance_num > 0) {
+        MTA_LOG_ERROR("get_line_table_vqm: Invalid instance %d", instance_num);
+        return RBUS_ERROR_ELEMENT_DOES_NOT_EXIST;
+    }
+    
     if (STR_EQ(short_name, "ResetStats")) {
         BOOL val = FALSE;
-        if (VQM_GetParamBoolValue(NULL, (char*)short_name, &val)) {
+        if (VQM_GetParamBoolValue(hInsContext, (char*)short_name, &val)) {
             rbusValue_SetBoolean(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -283,12 +526,27 @@ static rbusError_t get_line_table_vqm(const char *short_name, rbusValue_t *data)
 
 /** 
  * GET handler for Device.X_CISCO_COM_MTA.LineTable.{i}.VQM.Calls.{i}.* parameters
+ * Note: This is a nested table handler - requires TWO instance numbers
  */
-static rbusError_t get_line_table_vqm_calls(const char *short_name, rbusValue_t *data)
+static rbusError_t get_line_table_vqm_calls(const char *short_name, rbusValue_t *data, int line_instance, int calls_instance)
 {
     if (!data || !*data) {
         MTA_LOG_ERROR("get_line_table_vqm_calls: NULL data pointer");
         return RBUS_ERROR_BUS_ERROR;
+    }
+    
+    /* First get the LineTable instance */
+    ANSC_HANDLE hLineContext = get_linetable_instance(line_instance);
+    if (!hLineContext) {
+        MTA_LOG_ERROR("get_line_table_vqm_calls: Invalid LineTable instance %d", line_instance);
+        return RBUS_ERROR_ELEMENT_DOES_NOT_EXIST;
+    }
+    
+    /* Then get the Calls instance from that LineTable */
+    ANSC_HANDLE hInsContext = get_calls_instance(hLineContext, calls_instance);
+    if (!hInsContext) {
+        MTA_LOG_ERROR("get_line_table_vqm_calls: Invalid Calls instance %d in LineTable %d", calls_instance, line_instance);
+        return RBUS_ERROR_ELEMENT_DOES_NOT_EXIST;
     }
 
     if (STR_EQ(short_name, "JitterBufferAdaptive") ||
@@ -296,7 +554,7 @@ static rbusError_t get_line_table_vqm_calls(const char *short_name, rbusValue_t 
         STR_EQ(short_name, "JitterBufferDelay") ||
         STR_EQ(short_name, "RemoteJitterBufferAdaptive")) {
         BOOL val = FALSE;
-        if (Calls_GetParamBoolValue(NULL, (char*)short_name, &val)) {
+        if (Calls_GetParamBoolValue(hInsContext, (char*)short_name, &val)) {
             rbusValue_SetBoolean(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -304,7 +562,7 @@ static rbusError_t get_line_table_vqm_calls(const char *short_name, rbusValue_t 
     else if (STR_EQ(short_name, "RemoteIPAddress") ||
         STR_EQ(short_name, "CallDuration")) {
         ULONG val = 0;
-        if (Calls_GetParamUlongValue(NULL, (char*)short_name, &val)) {
+        if (Calls_GetParamUlongValue(hInsContext, (char*)short_name, &val)) {
             rbusValue_SetUInt32(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -372,7 +630,7 @@ static rbusError_t get_line_table_vqm_calls(const char *short_name, rbusValue_t 
         STR_EQ(short_name, "RemoteJBAbsMaxDelay")) {
         char val[256] = {0};
         ULONG val_len = sizeof(val);
-        if (Calls_GetParamStringValue(NULL, (char*)short_name, val, &val_len)) {
+        if (Calls_GetParamStringValue(hInsContext, (char*)short_name, val, &val_len) == 0) {
             rbusValue_SetString(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -384,17 +642,23 @@ static rbusError_t get_line_table_vqm_calls(const char *short_name, rbusValue_t 
 /**
  * GET handler for Device.X_CISCO_COM_MTA.ServiceClass.{i}.* parameters
  */
-static rbusError_t get_service_class(const char *short_name, rbusValue_t *data)
+static rbusError_t get_service_class(const char *short_name, rbusValue_t *data, int instance_num)
 {
     if (!data || !*data) {
         MTA_LOG_ERROR("get_service_class: NULL data pointer");
         return RBUS_ERROR_BUS_ERROR;
     }
     
+    ANSC_HANDLE hInsContext = get_serviceclass_instance(instance_num);
+    if (!hInsContext && instance_num > 0) {
+        MTA_LOG_ERROR("get_service_class: Invalid instance %d", instance_num);
+        return RBUS_ERROR_ELEMENT_DOES_NOT_EXIST;
+    }
+    
     if (STR_EQ(short_name, "ServiceClassName")) {
         char val[256] = {0};
         ULONG val_len = sizeof(val);
-        if (ServiceClass_GetParamStringValue(NULL, (char*)short_name, val, &val_len)) {
+        if (ServiceClass_GetParamStringValue(hInsContext, (char*)short_name, val, &val_len) == 0) {
             rbusValue_SetString(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -406,16 +670,30 @@ static rbusError_t get_service_class(const char *short_name, rbusValue_t *data)
 /**
  * GET handler for Device.X_CISCO_COM_MTA.ServiceFlow.{i}.* parameters
  */
-static rbusError_t get_service_flow(const char *short_name, rbusValue_t *data)
+static rbusError_t get_service_flow(const char *short_name, rbusValue_t *data, int instance_num)
 {
     if (!data || !*data) {
         MTA_LOG_ERROR("get_service_flow: NULL data pointer");
         return RBUS_ERROR_BUS_ERROR;
     }
+    
+    MTA_LOG_DEBUG("get_service_flow: short_name='%s', instance_num=%d", short_name, instance_num);
+    
+    if (instance_num <= 0) {
+        MTA_LOG_ERROR("get_service_flow: Invalid instance number %d (must be >= 1)", instance_num);
+        return RBUS_ERROR_ELEMENT_DOES_NOT_EXIST;
+    }
+    
+    ANSC_HANDLE hInsContext = get_serviceflow_instance(instance_num);
+    if (!hInsContext) {
+        MTA_LOG_ERROR("get_service_flow: Failed to get instance handle for instance %d", instance_num);
+        return RBUS_ERROR_ELEMENT_DOES_NOT_EXIST;
+    }
+    MTA_LOG_DEBUG("get_service_flow: Got instance handle %p for instance %d", hInsContext, instance_num);
 
     if (STR_EQ(short_name, "DefaultFlow")) {
         BOOL val = FALSE;
-        if (ServiceFlow_GetParamBoolValue(NULL, "DefaultFlow", &val)) {
+        if (ServiceFlow_GetParamBoolValue(hInsContext, "DefaultFlow", &val)) {
             rbusValue_SetBoolean(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -425,7 +703,7 @@ static rbusError_t get_service_flow(const char *short_name, rbusValue_t *data)
         STR_EQ(short_name, "ServiceClassName")) {
         char val[256] = {0};
         ULONG val_len = sizeof(val);
-        if (ServiceFlow_GetParamStringValue(NULL, (char*)short_name, val, &val_len)) {
+        if (ServiceFlow_GetParamStringValue(hInsContext, (char*)short_name, val, &val_len) == 0) {
             rbusValue_SetString(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -442,7 +720,7 @@ static rbusError_t get_service_flow(const char *short_name, rbusValue_t *data)
         STR_EQ(short_name, "MaxTrafficBurst") ||
         STR_EQ(short_name, "NumberOfPackets")) {
         ULONG val = 0;
-        if (ServiceFlow_GetParamUlongValue(NULL, (char*)short_name, &val)) {
+        if (ServiceFlow_GetParamUlongValue(hInsContext, (char*)short_name, &val)) {
             rbusValue_SetUInt32(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -483,7 +761,7 @@ static rbusError_t get_dect(const char *short_name, rbusValue_t *data)
         STR_EQ(short_name, "PIN")) {
         char val[256] = {0};
         ULONG val_len = sizeof(val);
-        if (Dect_GetParamStringValue(NULL, (char*)short_name, val, &val_len)) {
+        if (Dect_GetParamStringValue(NULL, (char*)short_name, val, &val_len) == 0) {
             rbusValue_SetString(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -495,11 +773,17 @@ static rbusError_t get_dect(const char *short_name, rbusValue_t *data)
 /**
  * GET handler for Device.X_CISCO_COM_MTA.Dect.Handsets.{i}.* parameters
  */
-static rbusError_t get_dect_handsets(const char *short_name, rbusValue_t *data)
+static rbusError_t get_dect_handsets(const char *short_name, rbusValue_t *data, int instance_num)
 {
     if (!data || !*data) {
         MTA_LOG_ERROR("get_dect_handsets: NULL data pointer");
         return RBUS_ERROR_BUS_ERROR;
+    }
+    
+    ANSC_HANDLE hInsContext = get_handsets_instance(instance_num);
+    if (!hInsContext && instance_num > 0) {
+        MTA_LOG_ERROR("get_dect_handsets: Invalid instance %d", instance_num);
+        return RBUS_ERROR_ELEMENT_DOES_NOT_EXIST;
     }
 
     if (STR_EQ(short_name, "LastActiveTime") ||
@@ -509,14 +793,14 @@ static rbusError_t get_dect_handsets(const char *short_name, rbusValue_t *data)
         STR_EQ(short_name, "SupportedTN")) {
         char val[256] = {0};
         ULONG val_len = sizeof(val);
-        if (Handsets_GetParamStringValue(NULL, (char*)short_name, val, &val_len)) {
+        if (Handsets_GetParamStringValue(hInsContext, (char*)short_name, val, &val_len) == 0) {
             rbusValue_SetString(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
     }
     else if (STR_EQ(short_name, "Status")) {
         BOOL val = FALSE;
-        if (Handsets_GetParamBoolValue(NULL, (char*)short_name, &val)) {
+        if (Handsets_GetParamBoolValue(hInsContext, (char*)short_name, &val)) {
             rbusValue_SetBoolean(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -528,17 +812,23 @@ static rbusError_t get_dect_handsets(const char *short_name, rbusValue_t *data)
 /**
  * GET handler for Device.X_CISCO_COM_MTA.DSXLog.{i}.* parameters
  */
-static rbusError_t get_dsxlog(const char *short_name, rbusValue_t *data)
+static rbusError_t get_dsxlog(const char *short_name, rbusValue_t *data, int instance_num)
 {    if (!data || !*data) {
         MTA_LOG_ERROR("get_dsxlog: NULL data pointer");
         return RBUS_ERROR_BUS_ERROR;
+    }
+    
+    ANSC_HANDLE hInsContext = get_dsxlog_instance(instance_num);
+    if (!hInsContext && instance_num > 0) {
+        MTA_LOG_ERROR("get_dsxlog: Invalid instance %d", instance_num);
+        return RBUS_ERROR_ELEMENT_DOES_NOT_EXIST;
     }
 
     if (STR_EQ(short_name, "Time") ||
         STR_EQ(short_name, "Description")) {
         char val[256] = {0};
         ULONG val_len = sizeof(val);
-        if (DSXLog_GetParamStringValue(NULL, (char*)short_name, val, &val_len)) {
+        if (DSXLog_GetParamStringValue(hInsContext, (char*)short_name, val, &val_len) == 0) {
             rbusValue_SetString(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -546,7 +836,7 @@ static rbusError_t get_dsxlog(const char *short_name, rbusValue_t *data)
     else if (STR_EQ(short_name, "ID") ||
         STR_EQ(short_name, "Level")) {
         ULONG val = 0;
-        if (DSXLog_GetParamUlongValue(NULL, (char*)short_name, &val)) {
+        if (DSXLog_GetParamUlongValue(hInsContext, (char*)short_name, &val)) {
             rbusValue_SetUInt32(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -557,11 +847,17 @@ static rbusError_t get_dsxlog(const char *short_name, rbusValue_t *data)
 /**
  * GET handler for Device.X_CISCO_COM_MTA.MTALog.{i}.* parameters
  */
-static rbusError_t get_mtalog(const char *short_name, rbusValue_t *data)
+static rbusError_t get_mtalog(const char *short_name, rbusValue_t *data, int instance_num)
 {
     if (!data || !*data) {
         MTA_LOG_ERROR("get_mtalog: NULL data pointer");
         return RBUS_ERROR_BUS_ERROR;
+    }
+    
+    ANSC_HANDLE hInsContext = get_mtalog_instance(instance_num);
+    if (!hInsContext && instance_num > 0) {
+        MTA_LOG_ERROR("get_mtalog: Invalid instance %d", instance_num);
+        return RBUS_ERROR_ELEMENT_DOES_NOT_EXIST;
     }
 
     if (STR_EQ(short_name, "Time") ||
@@ -569,7 +865,7 @@ static rbusError_t get_mtalog(const char *short_name, rbusValue_t *data)
         STR_EQ(short_name, "EventLevel")) {
         char val[256] = {0};
         ULONG val_len = sizeof(val);
-        if (MTALog_GetParamStringValue(NULL, (char*)short_name, val, &val_len)) {
+        if (MTALog_GetParamStringValue(hInsContext, (char*)short_name, val, &val_len) == 0) {
             rbusValue_SetString(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -577,7 +873,7 @@ static rbusError_t get_mtalog(const char *short_name, rbusValue_t *data)
     else if (STR_EQ(short_name, "Index") ||
         STR_EQ(short_name, "EventID")) {
         ULONG val = 0;
-        if (MTALog_GetParamUlongValue(NULL, (char*)short_name, &val)) {
+        if (MTALog_GetParamUlongValue(hInsContext, (char*)short_name, &val)) {
             rbusValue_SetUInt32(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -588,18 +884,24 @@ static rbusError_t get_mtalog(const char *short_name, rbusValue_t *data)
 /**
  * GET handler for Device.X_CISCO_COM_MTA.DECTLog.{i}.* parameters
  */
-static rbusError_t get_dectlog(const char *short_name, rbusValue_t *data)
+static rbusError_t get_dectlog(const char *short_name, rbusValue_t *data, int instance_num)
 {
     if (!data || !*data) {
         MTA_LOG_ERROR("get_dectlog: NULL data pointer");
         return RBUS_ERROR_BUS_ERROR;
+    }
+    
+    ANSC_HANDLE hInsContext = get_dectlog_instance(instance_num);
+    if (!hInsContext && instance_num > 0) {
+        MTA_LOG_ERROR("get_dectlog: Invalid instance %d", instance_num);
+        return RBUS_ERROR_ELEMENT_DOES_NOT_EXIST;
     }
 
     if (STR_EQ(short_name, "Time") ||
         STR_EQ(short_name, "Description")) {
         char val[256] = {0};
         ULONG val_len = sizeof(val);
-        if (DECTLog_GetParamStringValue(NULL, (char*)short_name, val, &val_len)) {
+        if (DECTLog_GetParamStringValue(hInsContext, (char*)short_name, val, &val_len) == 0) {
             rbusValue_SetString(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -608,7 +910,7 @@ static rbusError_t get_dectlog(const char *short_name, rbusValue_t *data)
         STR_EQ(short_name, "EventID") ||
         STR_EQ(short_name, "EventLevel")) {
         ULONG val = 0;
-        if (DECTLog_GetParamUlongValue(NULL, (char*)short_name, &val)) {
+        if (DECTLog_GetParamUlongValue(hInsContext, (char*)short_name, &val)) {
             rbusValue_SetUInt32(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -636,7 +938,7 @@ static rbusError_t get_battery(const char *short_name, rbusValue_t *data)
         STR_EQ(short_name, "ChargerFirmwareRevision")){
         char val[256] = {0};
         ULONG val_len = sizeof(val);
-        if (Battery_GetParamStringValue(NULL, (char*)short_name, val, &val_len)) {
+        if (Battery_GetParamStringValue(NULL, (char*)short_name, val, &val_len) == 0) {
             rbusValue_SetString(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -675,7 +977,7 @@ static rbusError_t get_voiceservice(const char *short_name, rbusValue_t *data)
     if (STR_EQ(short_name, "Data")) {
         char val[2048] = {0};
         ULONG val_len = sizeof(val);
-        if (VoiceService_GetParamStringValue(NULL, "Data", val, &val_len)) {
+        if (VoiceService_GetParamStringValue(NULL, "Data", val, &val_len) == 0) {
             rbusValue_SetString(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -706,7 +1008,7 @@ static rbusError_t get_x_rdkcentral_com_mta(const char *short_name, rbusValue_t 
     else if (STR_EQ(short_name, "LineRegisterStatus")) {
         char val[256] = {0};
         ULONG val_len = sizeof(val);
-        if (X_RDKCENTRAL_COM_MTA_GetParamStringValue(NULL, (char*)short_name, val, &val_len)) {
+        if (X_RDKCENTRAL_COM_MTA_GetParamStringValue(NULL, (char*)short_name, val, &val_len) == 0) {
             rbusValue_SetString(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -745,7 +1047,7 @@ static rbusError_t get_x_rdkcentral_com_ethernetwan_mta(const char *short_name, 
         STR_EQ(short_name, "IPv6SecondaryDhcpServerOptions")) {
         char val[256] = {0};
         ULONG val_len = sizeof(val);
-        if (EthernetWAN_MTA_GetParamStringValue(NULL, (char*)short_name, val, &val_len)) {
+        if (EthernetWAN_MTA_GetParamStringValue(NULL, (char*)short_name, val, &val_len) == 0) {
             rbusValue_SetString(*data, val);
             return RBUS_ERROR_SUCCESS;
         }
@@ -908,7 +1210,15 @@ rbusError_t mta_rbus_get_handler(rbusHandle_t handle, rbusProperty_t property, r
         return RBUS_ERROR_INVALID_INPUT;
     }
     
+    MTA_LOG_INFO("=== GET HANDLER START ===");
     MTA_LOG_INFO("GET request for: %s", param_name);
+    
+    /* Check if we received a wildcard path instead of concrete instance */
+    if (strstr(param_name, "{i}")) {
+        MTA_LOG_ERROR("CRITICAL: Received wildcard path with {i} instead of instance number: %s", param_name);
+        MTA_LOG_ERROR("This means table instances were not registered properly with RBUS");
+        return RBUS_ERROR_ELEMENT_DOES_NOT_EXIST;
+    }
     
     mta_param_metadata_t* metadata = mta_find_param_metadata(param_name);
     if (!metadata) {
@@ -922,6 +1232,24 @@ rbusError_t mta_rbus_get_handler(rbusHandle_t handle, rbusProperty_t property, r
         return RBUS_ERROR_BUS_ERROR;
     }
     
+    /* Extract instance number(s) for table parameters */
+    int instance_num = extract_instance_number(param_name);
+    int line_instance = -1;
+    int calls_instance = -1;
+    
+    MTA_LOG_DEBUG("Namespace type: %d", metadata->namespace_type);
+    MTA_LOG_DEBUG("Extracted instance_num: %d from path: %s", instance_num, param_name);
+    
+    /* For nested tables, extract both instance numbers */
+    if (metadata->namespace_type == MTA_NAMESPACE_X_CISCO_COM_MTA_LINETABLE_VQM_CALLS) {
+        if (!extract_nested_instances(param_name, &line_instance, &calls_instance)) {
+            MTA_LOG_ERROR("mta_rbus_get_handler: Failed to extract nested instances from %s", param_name);
+            rbusValue_Release(value);
+            return RBUS_ERROR_ELEMENT_DOES_NOT_EXIST;
+        }
+        MTA_LOG_INFO("Nested table query: LineTable.%d.VQM.Calls.%d", line_instance, calls_instance);
+    }
+    
     rbusError_t rc = RBUS_ERROR_ELEMENT_DOES_NOT_EXIST;
     
     switch (metadata->namespace_type) {
@@ -932,37 +1260,37 @@ rbusError_t mta_rbus_get_handler(rbusHandle_t handle, rbusProperty_t property, r
             rc = get_x_cisco_com_mta_v6(metadata->short_name, &value);
             break;
         case MTA_NAMESPACE_X_CISCO_COM_MTA_LINETABLE:
-            rc = get_line_table(metadata->short_name, &value);
+            rc = get_line_table(metadata->short_name, &value, instance_num);
             break;
         case MTA_NAMESPACE_X_CISCO_COM_MTA_LINETABLE_CALLP:
-            rc = get_line_table_callp(metadata->short_name, &value);
+            rc = get_line_table_callp(metadata->short_name, &value, instance_num);
             break;
         case MTA_NAMESPACE_X_CISCO_COM_MTA_LINETABLE_VQM:
-            rc = get_line_table_vqm(metadata->short_name, &value);
+            rc = get_line_table_vqm(metadata->short_name, &value, instance_num);
             break;
         case MTA_NAMESPACE_X_CISCO_COM_MTA_LINETABLE_VQM_CALLS:
-            rc = get_line_table_vqm_calls(metadata->short_name, &value);
+            rc = get_line_table_vqm_calls(metadata->short_name, &value, line_instance, calls_instance);
             break;
         case MTA_NAMESPACE_X_CISCO_COM_MTA_SERVICECLASS:
-            rc = get_service_class(metadata->short_name, &value);
+            rc = get_service_class(metadata->short_name, &value, instance_num);
             break;
         case MTA_NAMESPACE_X_CISCO_COM_MTA_SERVICEFLOW:
-            rc = get_service_flow(metadata->short_name, &value);
+            rc = get_service_flow(metadata->short_name, &value, instance_num);
             break;
         case MTA_NAMESPACE_X_CISCO_COM_MTA_DECT:
             rc = get_dect(metadata->short_name, &value);
             break;
         case MTA_NAMESPACE_X_CISCO_COM_MTA_DECT_HANDSETS:
-            rc = get_dect_handsets(metadata->short_name, &value);
+            rc = get_dect_handsets(metadata->short_name, &value, instance_num);
             break;
         case MTA_NAMESPACE_X_CISCO_COM_MTA_DSXLOG:
-            rc = get_dsxlog(metadata->short_name, &value);
+            rc = get_dsxlog(metadata->short_name, &value, instance_num);
             break;
         case MTA_NAMESPACE_X_CISCO_COM_MTA_MTALOG:
-            rc = get_mtalog(metadata->short_name, &value);
+            rc = get_mtalog(metadata->short_name, &value, instance_num);
             break;
         case MTA_NAMESPACE_X_CISCO_COM_MTA_DECTLOG:
-            rc = get_dectlog(metadata->short_name, &value);
+            rc = get_dectlog(metadata->short_name, &value, instance_num);
             break;
         case MTA_NAMESPACE_X_CISCO_COM_MTA_BATTERY:
             rc = get_battery(metadata->short_name, &value);
